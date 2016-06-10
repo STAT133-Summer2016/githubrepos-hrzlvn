@@ -1,0 +1,110 @@
+# lab3
+Read in csv file:
+```{r}
+library(readr)
+tents <- read_csv("tents.csv", col_types = "ccnniccc")
+
+```
+1. It tells us the column names of the data frame and the type of each column, plus a few examples in which column.
+```{r}
+str(tents)
+```
+
+2. **tents** is a tbl_df, table, dataframe objects. 
+
+3. rows in **tents**
+```{r}
+nrow(tents)
+```
+
+4. colums in **tents**
+```{r}
+ncol(tents)
+```
+
+5. names of colomns:
+```{r}
+colnames(tents)
+```
+
+6. the first 5 rows as follows
+```{r} 
+head(tents, 5)
+```
+
+7. the last 4 rows as follows
+```{r}
+tail(tents, 4)
+```
+
+8. 75th percentile - 50th percentile of the weights of the tents.
+```{r}
+quantile(tents$weight)[3:4]
+```
+
+9. use n-1 as denominator
+```{r}
+sd(tents$height)
+```
+
+10. adding weight_lbs colomn
+```{r}
+tents$weight_lbs = tents$weight * 0.0022046
+```
+
+11. adding height_in colomn
+```{r}
+tents$height_in = tents$height * 0.393701
+colnames(tents)
+```
+
+12. number of tents cost more than $400
+```{r}
+length(tents$price[tents$price > 400])
+```
+
+13. subset tents into so_cheap_tents
+```{r}
+sp_cheap_tents = subset(tents, tents$price <= 300)
+sp_cheap_tents
+```
+
+14. The percentage of big-agnes within the group > 300
+```{r}
+total = subset(tents, tents$price > 300)
+denom = nrow(total)
+nom = nrow(subset(total, total$brand == "big-agnes"))
+percentage = nom / denom
+percentage
+```
+
+15. Select the bestuse in 4 different ways
+```{r}
+tents$bestuse
+tents[6]$bestuse
+tents[["bestuse"]]
+tents[[6]]
+tents["bestuse"]$bestuse
+```
+
+16. The best height-weight ratio tent
+```{r}
+tents$name[which.max(tents$height/tents$weight)]
+```
+
+17. It creates a table with seasons being row indice and capacity being colomn indice
+```{r}
+table(tents$seasons, tents$capacity)
+```
+
+18. The most common type of tent is
+```{r}
+names(sort(table(tents$bestuse), decreasing = TRUE))[1]
+```
+
+19. Create Kelty, then Big-Agnes, then combine.
+```{r}
+kelty = subset(tents, tents$brand == "kelty")
+big_agnes = subset(tents, tents$brand == "big-agnes")
+rbind(kelty, big_agnes)
+```
