@@ -1,0 +1,120 @@
+---
+title: "lab6"
+author: "Andrew Do"
+date: "June 15, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Population Variance
+
+Write a function `MyVar` that calculates the population variance of a vector.  If you need a refresher of what that means, [this section of wikipedia should help](https://en.wikipedia.org/wiki/Variance#Population_variance_and_sample_variance).
+
+```{r}
+MyVar = function(x){
+  var(x)
+}
+```
+
+## Finding Roots
+Write a function `zeroes` that finds the roots (zeroes) of a degree two polynomial.  The function should take the coefficients of the polynomial $a^2x + bx + c$ as its arguments and returns a vector of roots.  If there are no real roots, the function should stop and produce an error message: `"This polynomial has no real roots."`
+
+```{r}
+zeroes = function(a, b, c){
+  if((b^2 - 4*a*c) < 0){
+    stop("This polynomial has no real roots.")}
+  else if((b^2 - 4*a*c) == 0){
+    root = (-b / (2*a))
+    return(root)
+  }
+  else{
+    root = c((-b + sqrt(b^2 - 4*a*c))/(2*a), (-b - sqrt(b^2 - 4*a*c))/(2*a)  )
+    return(root)
+  }
+}
+```
+
+Test your function:
+```{r, eval = F}
+zeroes(1, 0, 0)
+zeroes(1, 0, 1)
+zeroes(1, 1, 1)
+zeroes(1, 6, 5)
+```
+
+## Temperature Conversion
+
+Write a function `ConvertTemperature` that takes a numeric vector of temperatures in Fahrenheit and converts them into Celsius, Kelvin, Rankine, Delisle, Newton, Reamur, or Romer, depending on what the user specifies in an argument called `to`.  If they specify some other temperature scale, return the message "The [their input] temperature scale is not supported".  If you don't know the conversions, (see this table)[https://en.wikipedia.org/wiki/Conversion_of_units_of_temperature#Fahrenheit]
+
+```{r}
+ConvertTemperature = function(degree, unit){
+  if(unit == "Celsius" | unit == "celsius"){
+    ret = (degree - 32) * (5/9)
+    return(round(ret, digit = 2))
+  }
+  else if(unit == "Kelvin" | unit == "kelvin"){
+    ret = (degree + 459.67) *(5/9)
+    return(round(ret, digit = 2))}
+  else if(unit == "Rankine" | unit == "rankine"){
+    ret = degree + 459.67
+    return(round(ret, digit = 2))
+  }
+  else{
+    stop("we couldn't convert into this unit.")
+  }
+}
+```
+
+Test your function
+```{r}
+ConvertTemperature(32, "Celsius") == 0
+ConvertTemperature(212, "Kelvin") == 373.15
+ConvertTemperature(10, "Rankine") == 469.67
+```
+
+## Rolling Dice
+
+For this problem, you'll need the `sample` and `pmax` function.  `sample` generates a random sample of a specified size either with or without replacement.  You can specify probability weights for each element of your sample space using the `prob` argument.  By default, each element will have equal probability.
+```
+sample(x = vector_to_be_sampled, size, replace = FALSE, prob = NULL)
+```
+1. What does `pmax` do? How is it different from `max`? Hint: test both on the two vectors `c(1, 5, 3)` and `c(2, 4, 2)`.
+
+**Answer: pmax returns a vector of greater number with the same index within two vectors. max picks out the greatest number in all the vectors.**
+
+2. When you "roll dice with advantage", you roll a pair of dice and take the higher value as your roll.  Write a function `AdvRoll` the simulates rolling with advantage `n` times. The function should take on 2 arguments `sides` and `n` and output a length `n` vector of rolls.
+
+```{r}
+AdvRoll = function(sides, n){
+  ret = seq(n)
+  for(i in ret){
+    roll_1 = sample(seq(sides), 1, replace = TRUE, prob = NULL)
+    roll_2 =  sample(seq(sides), 1, replace = TRUE, prob = NULL)
+    num = max(roll_1, roll_2)
+    ret[i] = num
+  }
+  return(ret)
+}
+```
+
+3. Write your own summary function called `MySummary` that, given a numeric vector `x`, returns the following summary statistics: mean, median, mode, sum, and sum of squares.
+
+```{r}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+MySummary = function(x){
+  sprintf("mean: %f, median: %f, mode: %f, sum: %f, sum of squares: %f", mean(x), median(x), getmode(x), sum(x), sum(x^2))
+}
+MySummary(c(1,2,3,4,5, 6, 7, 8, 9, 10))
+```
+
+4. Using your two functions, simulate "rolling dice with advantage" 1000 times and find the summary statistics.
+
+```{r}
+MySummary(AdvRoll(6, 1000))
+```
