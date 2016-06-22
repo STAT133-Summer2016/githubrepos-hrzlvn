@@ -101,17 +101,17 @@ intersect(str_subset(states, "^W"), str_subset(states, "[^aeiou]$"))
 
 6. Which states contain at least three `i`'s (e.g. Illinois)?
 ```{r}
-str_subset(states, "/(.*[a-z]){3,}/i")
+str_subset(states, ".*[Ii].*[Ii].*[Ii].*")
 ```
 
 7. Which states contain exactly five vowels (e.g. California)?
 ```{r}
-str_subset(states, "([aeiou\\d])\\1\\1")
+str_subset(states, '([^aeiou]*[aeiou]){5}[^aeiou]*')
 ```
 
 8. Which states contain three consecutive vowels (e.g. Hawaii)?
 ```{r}
-
+str_subset(states, ".*[aeiou][aeiou][aeiou].*")
 ```
 
 ### Problem 3 Colors in Hexadecimal Notation (4 pts)
@@ -121,7 +121,7 @@ Write a function `is_hex()` that checks whether the input is a valid color in he
 ```{r}
 # is_hex()
 is_hex = function(x){
-  if(is.null(str_subset(x, "^#"))){
+  if((str_detect(x, "^#[0-9a-fA-F]{6}$"))){
     return(TRUE)
   }
   else{
@@ -149,10 +149,13 @@ Write a function called `reverse_chars` that reverses a string by characters. Yo
 
 ```{r}
 # reverse_chars()
+reverse_chars = function(x){
+  paste(rev(str_split(x, "")[[1]]), collapse = '')
+}
 ```
 
 Change `eval` to `TRUE` to test your function.
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 reverse_chars("Rictusempra")
 reverse_chars("Lumox Maxima")
 reverse_chars("Repello Muggletum")
@@ -171,11 +174,13 @@ Your job is to write a function `remove_tag` that takes a vector of text from an
 * `<kingdom>Plantae</kingdom>` is converted to `Plantae`
 
 ```{r}
-# Your code
+remove_tag = function(x){
+  str_replace_all(x, "</?[a-z]*>", "")
+}
 ```
 
 Test your code:
-```{r, eval = F}
+```{r, eval = TRUE}
 phylo <- c("<common>dandelion</common>",
            "<genus>Taraxacum</genus>",
            "<kingdom>Plantae</kingdom>")
@@ -199,10 +204,28 @@ Hints:
 
 ```{r}
 # dna_to_aa()
+library(readr)
+dna_to_aa = function(sequence){
+  ana_list = c()
+  if(str_detect(sequence, "[^AGCT]")){
+    ana_list = "Invalid DNA sequence"
+  }
+  else{
+    codons = read_csv("codons")
+    convertion = codons[["amino_acid"]]
+    names(convertion) = codons[["dna_triplet"]]
+    sequence = strsplit(sequence, "(?<=.{3})", perl = TRUE)[[1]] #split into 3-char-group
+    for(i in sequence){
+      ana = convertion[i]
+      ana_list = str_c(ana_list, ana, sep = "")
+    }
+  }
+  ana_list
+}
 ```
 
 Test your function:
-```{r, eval = F}
+```{r, eval = TRUE}
 dna_to_aa("GAGCCATGCATT") # "EPCI"
 dna_to_aa("ATCTAGATAGTAGGC") # "IStopIVG"
 dna_to_aa("UCUGAGAAU") # "Invalid DNA sequence"
