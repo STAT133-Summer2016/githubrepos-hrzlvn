@@ -1,0 +1,246 @@
+---
+title: "hw3"
+author: "Andrew Do"
+date: "June 16, 2016"
+output: html_document
+---
+## Allowed Packages
+
+The following packages are allowed for this assignment.  They have already been loaded in this document.
+
+* `readr`
+* `stringr`
+* `dplyr`
+* `tidyr`
+
+```{r packages, include = FALSE}
+library(readr)
+library(stringr)
+library(dplyr)
+library(tidyr)
+```
+
+## Readings
+Please read the `hw3_reading` file.  It contains supplementary material that you'll be responsible for knowing.
+
+## GitHub
+You will now clone the repository you've been curating into our class account.  Please follow the steps below:
+
+1.  [Click on this link to create a classwork repository](https://classroom.github.com/assignment-invitations/835d025a13c633bada1b31cbfba82250)
+2.  Copy the clone/download address for this new repository.  The link should look something like https://github.com/STAT133-Summer2016/githubrepos-youraccount.git
+3.  Open up terminal/Cygwin and go to your repository folder
+4.  Using a basic text editor (vim, notepad, textedit, etc.), create/modify your README.md file so that it looks like the text below.  End each of the Name, Preferred Name, and Email lines with two spaces so it generates a new line on GitHub.
+
+```
+### STAT133 Coursework - Summer 2016
+
+#### Owner Information
+Name: Your legal name as it appears in bCourses.
+Preferred Name: The name you go by in class
+Email: Your school email
+
+#### About this Repository
+This repository contains assignment files for STAT133 as taught by Andrew Do during UC-Berkeley's summer session 2016.  The hw folders contain my solutions to weekly homework assignments while the lab folders hold lab assignments organized by week.  The companion repository containing course files is: https://github.com/doctordo/stat133-su2016.
+```
+5.  Add a second remote address by typing in the commands below.  Now using `git push` will upload to both your own private repository under your account AND the one in the class account.
+```{sh, eval = F}
+git remote set-url origin --push --add https://github.com/STAT133-Summer2016/githubrepos-youraccount.git
+git push
+```
+6.  Continue using `git` as before.
+
+By the submission deadline of homework 3, your repository should contain populated folders for `hw1`, `hw2`, `hw3`; labs 1 and 3 in `labs1`; labs 5-7 in `labs2`; and labs 9-11 in `labs2`.
+
+## Problem 1 - Sammiches (12 points total)
+
+### Part 1 (4 points)
+A number `n` contains a sandwich one of its digits is flanked by two identical digits. For example, `298081` contains a sandwich since the `0` is surrounded by `8`s.  On the other hand, `183081` does not contain a sandwich.
+
+Using a loop, implement a `Sandwich(n)` function which takes a non-negative integer `n` and returns `TRUE` if `n` contains a sandwich and `FALSE` otherwise.  If `n` has fewer than 3 digits, it cannot contain a sandwich.
+
+```{r}
+# Your code here
+```
+
+Test your code
+```{r, eval = F}
+Sandwich(298081) # TRUE
+Sandwich(183081) # FALSE
+```
+
+### Part 2 (4 points)
+Using a regular expression, write a function `Sandwich2(n)` that finds does the same thing as `Sandwich(n)`.  This function should not contain any loops.
+
+```{r}
+# Your code here
+```
+
+Test your code
+```{r, eval = F}
+Sandwich2(298081) # TRUE
+Sandwich2(183081) # FALSE
+```
+
+### Part 3 (2 points)
+Suppose now, we want to find Big Macs, which are two consecutive digits that are flanked by two identical digits.  For example, `2982` is a Big Mac whereas `292` is not.  `339431` has a Big Mac in it, but `384921` does not.  Write a function `BigMac(n)` that tests if `n` is a Big Mac.
+```{r}
+# Your code here
+```
+
+Test your code
+```{r, eval = F}
+BigMac(339431) # TRUE
+BigMac(384921) # FALSE
+```
+### Part 4 (2 points)
+Actually, let's just find arbitrary `m-sandwiches`, which are two identical digits with `m` other digits in between them.  Make a function `MSandwich(n, m)` that determines if `n` contains an m-sandwich.  e.g. `42831211` has a 3-sandwich due to the substring `28312`, so `MSandwich(42831211, 3)` should return `TRUE`.
+
+```{r}
+# Your code here
+```
+
+Test your code:
+```{r, eval = F}
+MSandwich(42831211, 3) # TRUE
+MSandwich(12345678, 5) # FALSE
+```
+
+## Problem 2 - Luhn Sums (6 points)
+
+Consider an account number `n`, consisting of an arbitrary number of digits (e.g. 1839482718293842).  A common issue is that people mistype their account numbers into online forms.  Even given how powerful computers are nowadays, it would take an obscene amount of time to go through possibly 10^n combinations to check for validity.  One potential safeguard against this is to only assign accounts with valid check numbers, which obey a set of rules that can easily be verified.  The check number is typically the last number of an account.
+
+The checking algorithm involves taking a Luhn sum of the account number `n`. The sum can be found as follows:
+
+1.  Starting from the right, double the value of every second digit.
+2.  If doubling results in a two-digit number, sum those two digits.
+3.  Take the sum of all the resulting digits.
+
+
+Write a function `LuhnSum(n)` that finds the Luhn sum of a non-negative integer `n` (you can assume the user is competent).  See the test values for worked examples
+
+```{r}
+# Your code here
+```
+
+```{r, eval = F}
+LuhnSum(381) # 3 + (1 + 6) + 1 = 11
+LuhnSum(13291) # 1 + (6) + 2 + (1 + 8) + 1 = 19
+LuhnSum(4262) # (8) + 2 + (1 + 2) + 2 = 15
+```
+
+## Problem 3 - State Names (6 points)
+
+```{r}
+states <- rownames(USArrests)
+```
+
+This exercise is purely academic.  Write a script to obtain a list called `states_list` with all the states with `m` characters grouped together in a list element called `"charcountm"`.  For states with an even number of characters, the names should be in lower case; for those with an odd number, the names should be in upper case.  You must use a functional from the apply family---do not use a loop, do not create a data frame.
+
+The first few lines of your output should look like:
+
+```
+$charcount4
+[1] "iowa" "ohio" "utah"
+
+$charcount5
+[1] "IDAHO" "MAINE" "TEXAS"
+
+$charcount6
+[1] "alaska" "hawaii" "kansas" "nevada"
+[5] "oregon"
+...
+```
+
+```{r}
+# Your code here
+```
+
+## Problem 4 - Wee Baby Seamus (16 points total)
+
+Here's a sneak peak into programatically downloading and unzipping data from the web.  Go into your homework 3 working directory and type the following commands into terminal/cygwin.
+```{sh, eval = F}
+# This downloads the data set from the SSA
+curl -O https://www.ssa.gov/oact/babynames/names.zip
+
+# This unzips the file to a folder called babynames
+unzip names.zip -d babynames
+```
+If it complains about a command not being found, then you probably haven't installed it:
+```{sh, eval = F}
+# Windows
+# See the Piazza post Homework 00 on how to install apt-cyg if you haven't
+apt-cyg install name_of_command
+
+# Mac 
+# If you don't have homebrew installed:
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+brew install name_of_command
+
+# Linux
+sudo apt-get name_of_command
+```
+
+The babynames data set contains information on the number of children of each sex given each name for each year from 1880 to 2014.  Using the data wrangling tools in `dplyr` and `tidyr`, answer the following questions.  Like in homework 1, store the result in the bolded name and call on it so it shows up in your knitted document.
+
+### Part 1 - (5 points)
+
+Programatically read in the data set, combining all the txt files into a single data frame in R called `babynames`.  There are three columns in this data, which are NOT labelled in the original files.  You should name them `name`, `sex`, and `n`.  You should also add a fourth column that contains the `year` data. e.g. The top row of the data frame might look like:
+
+```{r, echo = F}
+data.frame(name = "Archer", sex = "M", n = "1", year = "2009")
+```
+
+
+You can list all the files of a directory using the `list.files()`.  For example, if you're in your homework 3 folder, then `list.files()` will act like `ls` in the terminal and `list.files("names")` will act like `ls names`.  
+
+You should not have to delete the `pdf` file that's in the `babynames` folder nor should you have to manually look up where it is in the `list.files()` output.
+
+Hints: 
+
+* `do.call`, `as.integer`, and `str_extract` may be useful
+* The way you would read in one of these files is:
+```{r, eval = F}
+read_csv("babynames/yob1880.txt", 
+         col_names = c("name", "sex", "n"), 
+         col_types = "cci")
+```
+
+```{r}
+# Your code here
+```
+
+### Part 2 (4 points)
+
+What were the top 3 most popular names by sex in the 90's and how many people were given each of those names? Your answer should be a six-row data frame with three columns: `name`, `sex`, and `count`.  The names should be alphabetical with females first.  __pop90__
+```{r}
+# Your code here
+```
+
+### Part 3 (7 points)
+
+Create a table for the years 2006-2015 similar to the one seen on the SSA page on baby names answering the question [what percentage of all names are represented in the top 1000 names](https://www.ssa.gov/oact/babynames/limits.html)?.  The names of the columns should be `year`, `male`, `female`, and `total`.  Your `total` column should be the percentage of all names represented by the top 1000 names out of both genders (not the top 1000 males and top 1000 females combined like on the website).  __nameperc__
+
+Hints: 
+
+* You may want to do this in two stages, once with the genders and once without and then combining the results.
+* Be careful with the `total` ...
+* Your answer should round off to the table below:
+
+```{r, echo = F}
+data.frame(year = c(2006, 2007, 2008, 2009, 2010, 
+                    2011, 2012, 2013, 2014, 2015),
+           male = c(86.04, 85.51, 85, 84.53, 84.3, 
+                    84.31, 84.12, 84.33, 84.28, 84.15),
+           female = c(75.31, 74.59, 74.13, 73.75, 73.66, 
+                      73.77, 73.61, 74.02, 74.38, 74.28),
+           total = c(73.16, 72.33, 71.57, 70.96, 70.75, 
+                     70.8, 70.55, 70.83, 70.77, 70.62))
+```
+
+```{r}
+# Your code here
+```
+
+### Discrepancy (0 points)
+Why should we expect our table to look different from the one presented on the SSA page?

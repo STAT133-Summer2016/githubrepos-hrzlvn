@@ -1,0 +1,82 @@
+---
+title: "Backreferencing"
+author: "Andrew Do"
+date: "June 16, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(stringr)
+```
+
+## Integer Division
+
+You may find the integer division infix operator useful: `%/%`.  It returns the elementary school result of division.  For example, since $29\div3=9 \ \text{remainder}  \ 2$, we have `29 %/% 3 = 9`.  Note that the modulo operator returns the remainder: `29 %% 3 = 2`, so we're always guaranteed the following: `m*(n %/% m) + (n %% m) = n`.
+
+## Ifelse
+
+`ifelse` is the vectorized form of the `if (test) expression1 else expression2` control flow.  Say you have a logical `test` vector.  If you have two vectors representing `yes` values and `no` values, then `ifelse` will return the `yes` value for all the `TRUE`s in the test vector and `no` for the `FALSE`s.  The `yes` and `no` vectors follow the recycling rule.
+
+```{r}
+ifelse(c(T, T, F, F, T), 1:5, 6:10)
+```
+
+Of course this is more useful when you have logical checks:
+```{r}
+x <- 1:6
+is_or_isnt <- ifelse(x %% 3 == 0, "is", "is not")
+str_c(x, is_or_isnt, "divisible by 3", sep = " ")
+```
+
+## Regex
+
+### OR
+
+To detect the presence of at least one pattern out of many, we use the `|` metacharacter, which you can think of as `OR`.  For example:
+
+```{r}
+reg <- "^(1[0-2]|[1-9]):[0-5][0-9][aApP][mM]$"
+str_detect(c("12:59pm", "9:23AM", "19:34"), reg)
+```
+
+The `(1[0-2]|[1-9])` allows either for the numbers 1-9 or 10-12 to show up in the string.
+
+### Backreferencing
+
+There is a useful feature of regex called  backreferencing that we didn't explicitly cover in lecture.  This is the idea that you can refer back to patterns that have been grouped in parentheses.  For example,
+
+```{r}
+strings <- c("Andrew Ryan Ben",
+             "Andrew Sarah Andrew",
+             "Michael Danny Andrew",
+             "Chris Andrew Jon")
+
+str_subset(strings, "(Andrew).*\\1")
+```
+
+The `\\1` references back to the first item captured in parentheses, namely `"Andrew"` in this particular example.  We call `\\1` a __backreference__ and `"Andrew"` a __captured expression or captured group__.  In other programming languages, you typically only have to type '\1', but remember that the escape is the double slash `\\` in R.
+
+Here's how it interacts with `str_replace` and `str_replace_all`.
+
+```{r}
+str_replace(strings, "(Chris) (Andrew) (Jon)", "\\2 Alex \\1")
+```
+
+Note how the fourth string changes.  `str_replace` remembers that `\\1` and `\\2` refer to the first and second captured groups, `Chris` and `Andrew`, respectively.   
+
+Of course, regex is at its most powerful when you actually use wildcards and character classes. The backreferences refer exactly to what was matched by the wildcards and character classes rather than the abstract idea of "anything" or "something from this class".
+
+Say I have these dirty strings
+```{r}
+things <- c("pair of of shoes.", "pack pack of gum.", "small in-bathtub tub.")
+costs <- c(60, 1, 3)
+example <- str_c("It It costs $", costs, " to get a a ", things)
+example
+```
+
+Let's say I want to clean up the words that were somehow accidentally doubled.  This often happens when commonly used words are wrapped around to a new line in a text editor.  `"the the"` is often a major offender. One approach using regular expressions might be as follows:
+```{r}
+str_replace_all(example, "(^| )([a-zA-Z]+) \\2([ .])", "\\1\\2\\3")
+```
+
+The first captured expression, `(^| )` is either the beginning of the string or a space (what happens if we don't include the `^`?).  The second captured group, `([a-zA-Z]+)`, is meant to be words, and the immediate backreference to it, `\\2`, conveys the idea that the word is being repeated.  The last captured group, `([ .])`, detects whether or not the match was followed by a space or a period.

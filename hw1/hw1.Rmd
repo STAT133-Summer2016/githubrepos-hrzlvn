@@ -1,0 +1,99 @@
+---
+title: "homework1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Install the `nycflights13` package by typing `install.packages("nycflights13")` into the console (do not leave this in your R Markdown document).  Now load the data set using the following commands:
+
+```{r}
+library(nycflights13)
+data(flights)
+```
+
+You can find the codebook for this dataset using `help(flights).
+
+Using base R commands, answer the following questions (4 points each).  The bolded word is what you should save your answer under.  You should then print the value.  You can break the problem into smaller steps if needed.  No additional packages should be loaded.  An example is given below.
+
+#### Example
+Which plane (tailnumber) has the longest arrival delay? 
+```{r}
+# To access a variable in a data frame as a vector, the syntax is:
+# name_of_data_frame$name_of_variable
+
+plane_max_ad <- flights$tailnum[which.max(flights$arr_delay)]
+plane_max_ad
+```
+
+1. How many rows are in this data frame? 
+```{r}
+num_rows = nrow(flights)
+num_rows
+```
+
+2. How many variables are in this data frame?
+```{r}
+num_vars = nrow(flights) * ncol(flights)
+num_vars
+```
+
+3. What was the longest departure delay? 
+```{r}
+dep_delays = (flights$dep_delay)
+dep_delays[is.na(dep_delays)] = 0
+longest_dep_delay = max(dep_delays)
+longest_dep_delay
+```
+
+4. How long were the top 10 longest flights measured using `air_time`? 
+```{r}
+longest_flights = sort(flights$air_time, decreasing = TRUE)[1:10]
+longest_flights
+```
+
+5. What is the average departure delay time for United Airlines (carrier UA)?
+```{r}
+ua_delay = flights$dep_delay[which(flights$carrier == "UA")]
+ua_delay[is.na(ua_delay)] = 0
+ua_delay = mean(ua_delay)
+ua_delay
+```
+
+6. Order the months from highest average departure delay time to lowest.
+```{r}
+month_delay = rep(0, 12)
+for(i in 1:12){
+  month_i_delay = flights$dep_delay[which(flights$month == i)]
+  month_i_delay[is.na(month_i_delay)] = 0
+  month_delay[i] = mean(month_i_delay)
+}
+month_delay = order(month_delay)
+month_delay
+```
+
+7. How many unique planes does American Airlines (AA) have? 
+```{r}
+num_planes_aa = length(unique(flights$tailnum[which(flights$carrier == "AA")]))
+num_planes_aa
+```
+
+8. How many flights originating from JFK flew more than 1000 miles? 
+```{r}
+jfk_1000mi = length(flights$distance[which(flights$origin == "JFK" & flights$distance > 1000)])
+jfk_1000mi
+```
+
+9. How many airlines fly from LGA to DFW?
+```{r}
+num_lga_dfw = length(flights$carrier[which(flights$origin == "LGA" & flights$dest == "DFW")])
+num_lga_dfw
+```
+
+10. Which airline had the most flights coming out of JFK? 
+```{r}
+most_flights_jfk = flights$carrier[which.max(length(flights$origin == "JFK"))]
+most_flights_jfk
+```
