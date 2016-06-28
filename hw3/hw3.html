@@ -9,9 +9,9 @@
 <meta name="generator" content="pandoc" />
 
 
-<meta name="author" content="Andrew Do" />
+<meta name="author" content="Rongzhao Huang" />
 
-<meta name="date" content="2016-06-16" />
+<meta name="date" content="2016-06-27" />
 
 <title>hw3</title>
 
@@ -117,8 +117,8 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">hw3</h1>
-<h4 class="author"><em>Andrew Do</em></h4>
-<h4 class="date"><em>June 16, 2016</em></h4>
+<h4 class="author"><em>Rongzhao Huang</em></h4>
+<h4 class="date"><em>June 27, 2016</em></h4>
 
 </div>
 
@@ -144,7 +144,7 @@ $(document).ready(function () {
 <li><a href="https://classroom.github.com/assignment-invitations/835d025a13c633bada1b31cbfba82250">Click on this link to create a classwork repository</a></li>
 <li>Copy the clone/download address for this new repository. The link should look something like <a href="https://github.com/STAT133-Summer2016/githubrepos-youraccount.git" class="uri">https://github.com/STAT133-Summer2016/githubrepos-youraccount.git</a></li>
 <li>Open up terminal/Cygwin and go to your repository folder</li>
-<li>Using a basic text editor (vim, notepad, textedit, etc.), create/modify your README.md file so that it looks like:</li>
+<li>Using a basic text editor (vim, notepad, textedit, etc.), create/modify your README.md file so that it looks like the text below. End each of the Name, Preferred Name, and Email lines with two spaces so it generates a new line on GitHub.</li>
 </ol>
 <pre><code>### STAT133 Coursework - Summer 2016
 
@@ -171,34 +171,65 @@ git push</code></pre>
 <h3>Part 1 (4 points)</h3>
 <p>A number <code>n</code> contains a sandwich one of its digits is flanked by two identical digits. For example, <code>298081</code> contains a sandwich since the <code>0</code> is surrounded by <code>8</code>s. On the other hand, <code>183081</code> does not contain a sandwich.</p>
 <p>Using a loop, implement a <code>Sandwich(n)</code> function which takes a non-negative integer <code>n</code> and returns <code>TRUE</code> if <code>n</code> contains a sandwich and <code>FALSE</code> otherwise. If <code>n</code> has fewer than 3 digits, it cannot contain a sandwich.</p>
-<pre class="r"><code># Your code here</code></pre>
+<pre class="r"><code># Your code here
+Sandwich = function(number){
+  number = as.character(number)
+  if (nchar(number) &gt; 2){
+    for (i in 0:9){
+      patn = str_c(as.character(i), &quot;[0-9]&quot;, as.character(i), sep = &quot;&quot;, collapse = &quot;&quot;)
+      if (str_detect(number, patn)){
+        return(TRUE)
+      }
+    }
+  }
+  return(FALSE)
+}</code></pre>
 <p>Test your code</p>
-<pre class="r"><code>Sandwich(298081) # TRUE
-Sandwich(183081) # FALSE</code></pre>
+<pre class="r"><code>Sandwich(298081) # TRUE</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>Sandwich(183081) # FALSE</code></pre>
+<pre><code>## [1] FALSE</code></pre>
 </div>
 <div id="part-2-4-points" class="section level3">
 <h3>Part 2 (4 points)</h3>
 <p>Using a regular expression, write a function <code>Sandwich2(n)</code> that finds does the same thing as <code>Sandwich(n)</code>. This function should not contain any loops.</p>
-<pre class="r"><code># Your code here</code></pre>
+<pre class="r"><code># Your code here
+Sandwich2 = function(n){
+  str_detect(n, &quot;([0-9])([0-9])\\1&quot;)
+}</code></pre>
 <p>Test your code</p>
-<pre class="r"><code>Sandwich2(298081) # TRUE
-Sandwich2(183081) # FALSE</code></pre>
+<pre class="r"><code>Sandwich2(298081) # TRUE</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>Sandwich2(183081) # FALSE</code></pre>
+<pre><code>## [1] FALSE</code></pre>
 </div>
 <div id="part-3-2-points" class="section level3">
 <h3>Part 3 (2 points)</h3>
 <p>Suppose now, we want to find Big Macs, which are two consecutive digits that are flanked by two identical digits. For example, <code>2982</code> is a Big Mac whereas <code>292</code> is not. <code>339431</code> has a Big Mac in it, but <code>384921</code> does not. Write a function <code>BigMac(n)</code> that tests if <code>n</code> is a Big Mac.</p>
-<pre class="r"><code># Your code here</code></pre>
+<pre class="r"><code># Your code here
+BigMac = function(n){
+  str_detect(n, &quot;([0-9])([0-9])([0-9])\\1&quot;)
+}</code></pre>
 <p>Test your code</p>
-<pre class="r"><code>BigMac(339431) # TRUE
-BigMac(384921) # FALSE</code></pre>
+<pre class="r"><code>BigMac(339431) # TRUE</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>BigMac(384921) # FALSE</code></pre>
+<pre><code>## [1] FALSE</code></pre>
 </div>
 <div id="part-4-2-points" class="section level3">
 <h3>Part 4 (2 points)</h3>
 <p>Actually, let’s just find arbitrary <code>m-sandwiches</code>, which are two identical digits with <code>m</code> other digits in between them. Make a function <code>MSandwich(n, m)</code> that determines if <code>n</code> contains an m-sandwich. e.g. <code>42831211</code> has a 3-sandwich due to the substring <code>28312</code>, so <code>MSandwich(42831211, 3)</code> should return <code>TRUE</code>.</p>
-<pre class="r"><code># Your code here</code></pre>
+<pre class="r"><code># Your code here
+MSandwich = function(n, m){
+  patn = str_c(&quot;([0-9])[0-9]{&quot;, m, &quot;}\\1&quot;)
+  m = as.numeric(m)
+  str_detect(n, patn)
+}</code></pre>
 <p>Test your code:</p>
-<pre class="r"><code>MSandwich(42831211, 3) # TRUE
-MSandwich(12345678, 5) # FALSE</code></pre>
+<pre class="r"><code>MSandwich(42831211, 3) # TRUE</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>MSandwich(12345678, 5) # FALSE</code></pre>
+<pre><code>## [1] FALSE</code></pre>
 </div>
 </div>
 <div id="problem-2---luhn-sums-6-points" class="section level2">
@@ -211,10 +242,42 @@ MSandwich(12345678, 5) # FALSE</code></pre>
 <li>Take the sum of all the resulting digits.</li>
 </ol>
 <p>Write a function <code>LuhnSum(n)</code> that finds the Luhn sum of a non-negative integer <code>n</code> (you can assume the user is competent). See the test values for worked examples</p>
-<pre class="r"><code># Your code here</code></pre>
-<pre class="r"><code>LuhnSum(381) # 3 + (1 + 6) + 1 = 11
-LuhnSum(13291) # 1 + (6) + 2 + (1 + 8) + 1 = 19
-LuhnSum(4262) # (8) + 2 + (1 + 2) + 2 = 15</code></pre>
+<pre class="r"><code># Your code here
+LuhnSum = function(n){
+  num = as.numeric(str_split(n, &quot;&quot;)[[1]])
+  #even length pattern FTFT
+  
+  if(length(num) %% 2 == 0){
+    num_reg = num[c(F, T)]
+    num_double = num[c(T, F)]
+  }
+  
+  #odd length pattern TFTFT
+  else{
+    num_reg = num[c(T, F)]
+    num_double = num[c(F, T)]
+  }
+  
+  num_double = num_double * 2
+  sum_double = 0
+  for(i in num_double){
+    if(i &gt;= 10){
+      sum_double = sum_double + i%%10 + 1
+    }
+    else{
+      sum_double = sum_double + i
+    }
+  }
+  sum = sum(num_reg) + sum_double
+  
+return(sum)
+}</code></pre>
+<pre class="r"><code>LuhnSum(381) # 3 + (1 + 6) + 1 = 11</code></pre>
+<pre><code>## [1] 11</code></pre>
+<pre class="r"><code>LuhnSum(13291) # 1 + (6) + 2 + (1 + 8) + 1 = 19</code></pre>
+<pre><code>## [1] 19</code></pre>
+<pre class="r"><code>LuhnSum(4262) # (8) + 2 + (1 + 2) + 2 = 15</code></pre>
+<pre><code>## [1] 15</code></pre>
 </div>
 <div id="problem-3---state-names-6-points" class="section level2">
 <h2>Problem 3 - State Names (6 points)</h2>
@@ -231,7 +294,54 @@ $charcount6
 [1] &quot;alaska&quot; &quot;hawaii&quot; &quot;kansas&quot; &quot;nevada&quot;
 [5] &quot;oregon&quot;
 ...</code></pre>
-<pre class="r"><code># Your code here</code></pre>
+<pre class="r"><code>convert_case = function(n){
+  states_list = states[nchar(states) == n]
+  if (n%%2 == 1){
+    states_list = str_to_upper(states_list)
+  }
+  states_list
+}
+
+max_num = max(nchar(states))
+min_num = min(nchar(states))
+char_states_list = as.list(min_num:max_num)
+names(char_states_list) = str_c(&quot;charcount&quot;, min_num:max_num, sep = &quot;&quot;)
+char_states_list = lapply(char_states_list, convert_case)
+char_states_list</code></pre>
+<pre><code>## $charcount4
+## [1] &quot;Iowa&quot; &quot;Ohio&quot; &quot;Utah&quot;
+## 
+## $charcount5
+## [1] &quot;IDAHO&quot; &quot;MAINE&quot; &quot;TEXAS&quot;
+## 
+## $charcount6
+## [1] &quot;Alaska&quot; &quot;Hawaii&quot; &quot;Kansas&quot; &quot;Nevada&quot; &quot;Oregon&quot;
+## 
+## $charcount7
+## [1] &quot;ALABAMA&quot; &quot;ARIZONA&quot; &quot;FLORIDA&quot; &quot;GEORGIA&quot; &quot;INDIANA&quot; &quot;MONTANA&quot; &quot;VERMONT&quot;
+## [8] &quot;WYOMING&quot;
+## 
+## $charcount8
+##  [1] &quot;Arkansas&quot; &quot;Colorado&quot; &quot;Delaware&quot; &quot;Illinois&quot; &quot;Kentucky&quot; &quot;Maryland&quot;
+##  [7] &quot;Michigan&quot; &quot;Missouri&quot; &quot;Nebraska&quot; &quot;New York&quot; &quot;Oklahoma&quot; &quot;Virginia&quot;
+## 
+## $charcount9
+## [1] &quot;LOUISIANA&quot; &quot;MINNESOTA&quot; &quot;TENNESSEE&quot; &quot;WISCONSIN&quot;
+## 
+## $charcount10
+## [1] &quot;California&quot; &quot;New Jersey&quot; &quot;New Mexico&quot; &quot;Washington&quot;
+## 
+## $charcount11
+## [1] &quot;CONNECTICUT&quot; &quot;MISSISSIPPI&quot;
+## 
+## $charcount12
+## [1] &quot;North Dakota&quot; &quot;Pennsylvania&quot; &quot;Rhode Island&quot; &quot;South Dakota&quot;
+## 
+## $charcount13
+## [1] &quot;MASSACHUSETTS&quot; &quot;NEW HAMPSHIRE&quot; &quot;WEST VIRGINIA&quot;
+## 
+## $charcount14
+## [1] &quot;North Carolina&quot; &quot;South Carolina&quot;</code></pre>
 </div>
 <div id="problem-4---wee-baby-seamus-16-points-total" class="section level2">
 <h2>Problem 4 - Wee Baby Seamus (16 points total)</h2>
@@ -270,12 +380,67 @@ sudo apt-get name_of_command</code></pre>
 <pre class="r"><code>read_csv(&quot;babynames/yob1880.txt&quot;, 
          col_names = c(&quot;name&quot;, &quot;sex&quot;, &quot;n&quot;), 
          col_types = &quot;cci&quot;)</code></pre>
-<pre class="r"><code># Your code here</code></pre>
+<pre class="r"><code># Your code here
+
+read_with_year = function(filename){
+  df = read_csv(filename, col_names = c(&quot;name&quot;, &quot;sex&quot;, &quot;n&quot;), col_types = &quot;cci&quot;)
+  mutate(df, year = str_replace_all(filename, &quot;babynames/yob([0-9]{4})\\.txt&quot;, &quot;\\1&quot;))
+}
+filenames = str_c(&quot;babynames/&quot;, list.files(&quot;babynames&quot;))
+names_list = lapply(filenames[-1],
+               read_with_year
+               )
+babynames = do.call(rbind, names_list)
+babynames</code></pre>
+<pre><code>## Source: local data frame [1,858,689 x 4]
+## 
+##         name   sex     n  year
+##        &lt;chr&gt; &lt;chr&gt; &lt;int&gt; &lt;chr&gt;
+## 1       Mary     F  7065  1880
+## 2       Anna     F  2604  1880
+## 3       Emma     F  2003  1880
+## 4  Elizabeth     F  1939  1880
+## 5     Minnie     F  1746  1880
+## 6   Margaret     F  1578  1880
+## 7        Ida     F  1472  1880
+## 8      Alice     F  1414  1880
+## 9     Bertha     F  1320  1880
+## 10     Sarah     F  1288  1880
+## ..       ...   ...   ...   ...</code></pre>
 </div>
 <div id="part-2-4-points-1" class="section level3">
 <h3>Part 2 (4 points)</h3>
 <p>What were the top 3 most popular names by sex in the 90’s and how many people were given each of those names? Your answer should be a six-row data frame with three columns: <code>name</code>, <code>sex</code>, and <code>count</code>. The names should be alphabetical with females first. <strong>pop90</strong></p>
-<pre class="r"><code># Your code here</code></pre>
+<pre class="r"><code># Your code here
+nineties_male = filter(babynames, str_detect(year, &quot;[1][9][9][0-9]&quot;) &amp; sex == &quot;M&quot;) %&gt;% 
+  group_by(name) %&gt;% 
+  tally() %&gt;% 
+  arrange(desc(n)) %&gt;% 
+  head(3, n) %&gt;% 
+  rename(count = n) %&gt;% 
+  arrange(name) %&gt;% 
+  mutate(sex = &quot;M&quot;)</code></pre>
+<pre><code>## Using n as weighting variable</code></pre>
+<pre class="r"><code>nineties_female = filter(babynames, str_detect(year, &quot;[1][9][9][0-9]&quot;) &amp; sex == &quot;F&quot;) %&gt;% 
+  group_by(name) %&gt;% 
+  tally() %&gt;% 
+  arrange(desc(n)) %&gt;% 
+  head(3, n) %&gt;% 
+  rename(count = n) %&gt;% 
+  arrange(name) %&gt;% 
+  mutate(sex = &quot;F&quot;)</code></pre>
+<pre><code>## Using n as weighting variable</code></pre>
+<pre class="r"><code>rbind(nineties_female, nineties_male)[, c(1, 3, 2)]</code></pre>
+<pre><code>## Source: local data frame [6 x 3]
+## 
+##          name   sex  count
+##         &lt;chr&gt; &lt;chr&gt;  &lt;int&gt;
+## 1      Ashley     F 301789
+## 2       Emily     F 237216
+## 3     Jessica     F 303069
+## 4 Christopher     M 360187
+## 5     Matthew     M 351585
+## 6     Michael     M 462289</code></pre>
 </div>
 <div id="part-3-7-points" class="section level3">
 <h3>Part 3 (7 points)</h3>
@@ -286,6 +451,14 @@ sudo apt-get name_of_command</code></pre>
 <li>Be careful with the <code>total</code> …</li>
 <li>Your answer should round off to the table below:</li>
 </ul>
+<pre class="r"><code>data.frame(year = c(2006, 2007, 2008, 2009, 2010, 
+                    2011, 2012, 2013, 2014, 2015),
+           male = c(86.04, 85.51, 85, 84.53, 84.3, 
+                    84.31, 84.12, 84.33, 84.28, 84.15),
+           female = c(75.31, 74.59, 74.13, 73.75, 73.66, 
+                      73.77, 73.61, 74.02, 74.38, 74.28),
+           total = c(73.16, 72.33, 71.57, 70.96, 70.75, 
+                     70.8, 70.55, 70.83, 70.77, 70.62))</code></pre>
 <pre><code>##    year  male female total
 ## 1  2006 86.04  75.31 73.16
 ## 2  2007 85.51  74.59 72.33
@@ -297,7 +470,57 @@ sudo apt-get name_of_command</code></pre>
 ## 8  2013 84.33  74.02 70.83
 ## 9  2014 84.28  74.38 70.77
 ## 10 2015 84.15  74.28 70.62</code></pre>
-<pre class="r"><code># Your code here</code></pre>
+<pre class="r"><code># Your code here
+get_names_of_given_year = function(y, g = &quot;[MF]&quot;){
+  filter(babynames, year == y, str_detect(sex, g))
+}
+
+get_rate_of_representation = function(names){
+  
+  top1k = names %&gt;% 
+    arrange(desc(n)) %&gt;%
+    head(1000) %&gt;%
+    summarise(count = sum(n))
+  first_1000 = top1k$count
+  
+  
+  all = names %&gt;% 
+    arrange(desc(n)) %&gt;% 
+    summarise(count = sum(n))
+  
+  round(top1k / all * 100, digit = 2)
+}
+
+female_rates = unlist(lapply(2006:2015, get_names_of_given_year, &quot;F&quot;) %&gt;% 
+  lapply(get_rate_of_representation))
+
+male_rates = unlist(lapply(2006:2015, get_names_of_given_year, &quot;M&quot;) %&gt;% 
+  lapply(get_rate_of_representation))
+
+total_rates = unlist(lapply(2006:2015, get_names_of_given_year) %&gt;% 
+  lapply(get_rate_of_representation))
+
+percentage = data.frame(year = 2006:2015,
+           male = male_rates,
+           female = female_rates,
+           total = total_rates)
+percentage</code></pre>
+<pre><code>##    year  male female total
+## 1  2006 86.03  75.31 72.11
+## 2  2007 85.51  74.59 71.25
+## 3  2008 85.00  74.09 70.44
+## 4  2009 84.52  73.72 69.81
+## 5  2010 84.28  73.65 69.62
+## 6  2011 84.28  73.71 69.64
+## 7  2012 84.12  73.61 69.38
+## 8  2013 84.32  74.01 69.67
+## 9  2014 84.26  74.35 69.55
+## 10 2015 84.12  74.26 69.30</code></pre>
+</div>
+<div id="discrepancy-0-points" class="section level3">
+<h3>Discrepancy (0 points)</h3>
+<p>Why should we expect our table to look different from the one presented on the SSA page?</p>
+<p>Privacy Protection, some name is not shown on the dataset they provided.</p>
 </div>
 </div>
 

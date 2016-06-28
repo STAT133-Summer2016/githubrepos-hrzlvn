@@ -1,7 +1,7 @@
 ---
 title: "hw3"
-author: "Andrew Do"
-date: "June 16, 2016"
+author: "Rongzhao Huang"
+date: "June 27, 2016"
 output: html_document
 ---
 ## Allowed Packages
@@ -60,10 +60,22 @@ Using a loop, implement a `Sandwich(n)` function which takes a non-negative inte
 
 ```{r}
 # Your code here
+Sandwich = function(number){
+  number = as.character(number)
+  if (nchar(number) > 2){
+    for (i in 0:9){
+      patn = str_c(as.character(i), "[0-9]", as.character(i), sep = "", collapse = "")
+      if (str_detect(number, patn)){
+        return(TRUE)
+      }
+    }
+  }
+  return(FALSE)
+}
 ```
 
 Test your code
-```{r, eval = F}
+```{r, eval = T}
 Sandwich(298081) # TRUE
 Sandwich(183081) # FALSE
 ```
@@ -73,10 +85,13 @@ Using a regular expression, write a function `Sandwich2(n)` that finds does the 
 
 ```{r}
 # Your code here
+Sandwich2 = function(n){
+  str_detect(n, "([0-9])([0-9])\\1")
+}
 ```
 
 Test your code
-```{r, eval = F}
+```{r, eval = T}
 Sandwich2(298081) # TRUE
 Sandwich2(183081) # FALSE
 ```
@@ -84,11 +99,15 @@ Sandwich2(183081) # FALSE
 ### Part 3 (2 points)
 Suppose now, we want to find Big Macs, which are two consecutive digits that are flanked by two identical digits.  For example, `2982` is a Big Mac whereas `292` is not.  `339431` has a Big Mac in it, but `384921` does not.  Write a function `BigMac(n)` that tests if `n` is a Big Mac.
 ```{r}
+
 # Your code here
+BigMac = function(n){
+  str_detect(n, "([0-9])([0-9])([0-9])\\1")
+}
 ```
 
 Test your code
-```{r, eval = F}
+```{r, eval = T}
 BigMac(339431) # TRUE
 BigMac(384921) # FALSE
 ```
@@ -97,10 +116,15 @@ Actually, let's just find arbitrary `m-sandwiches`, which are two identical digi
 
 ```{r}
 # Your code here
+MSandwich = function(n, m){
+  patn = str_c("([0-9])[0-9]{", m, "}\\1")
+  m = as.numeric(m)
+  str_detect(n, patn)
+}
 ```
 
 Test your code:
-```{r, eval = F}
+```{r, eval = T}
 MSandwich(42831211, 3) # TRUE
 MSandwich(12345678, 5) # FALSE
 ```
@@ -120,9 +144,41 @@ Write a function `LuhnSum(n)` that finds the Luhn sum of a non-negative integer 
 
 ```{r}
 # Your code here
+LuhnSum = function(n){
+  num = as.numeric(str_split(n, "")[[1]])
+  #even length pattern FTFT
+  
+  if(length(num) %% 2 == 0){
+    num_reg = num[c(F, T)]
+    num_double = num[c(T, F)]
+  }
+  
+  #odd length pattern TFTFT
+  else{
+    num_reg = num[c(T, F)]
+    num_double = num[c(F, T)]
+  }
+  
+  num_double = num_double * 2
+  sum_double = 0
+  for(i in num_double){
+    if(i >= 10){
+      sum_double = sum_double + i%%10 + 1
+    }
+    else{
+      sum_double = sum_double + i
+    }
+  }
+  sum = sum(num_reg) + sum_double
+  
+return(sum)
+}
+
+
 ```
 
-```{r, eval = F}
+
+```{r, eval = T}
 LuhnSum(381) # 3 + (1 + 6) + 1 = 11
 LuhnSum(13291) # 1 + (6) + 2 + (1 + 8) + 1 = 19
 LuhnSum(4262) # (8) + 2 + (1 + 2) + 2 = 15
@@ -152,7 +208,22 @@ $charcount6
 ```
 
 ```{r}
-# Your code here
+convert_case = function(n){
+  states_list = states[nchar(states) == n]
+  if (n%%2 == 1){
+    states_list = str_to_upper(states_list)
+  }
+  states_list
+}
+
+max_num = max(nchar(states))
+min_num = min(nchar(states))
+char_states_list = as.list(min_num:max_num)
+names(char_states_list) = str_c("charcount", min_num:max_num, sep = "")
+char_states_list = lapply(char_states_list, convert_case)
+char_states_list
+
+
 ```
 
 ## Problem 4 - Wee Baby Seamus (16 points total)
@@ -208,6 +279,17 @@ read_csv("babynames/yob1880.txt",
 
 ```{r}
 # Your code here
+
+read_with_year = function(filename){
+  df = read_csv(filename, col_names = c("name", "sex", "n"), col_types = "cci")
+  mutate(df, year = str_replace_all(filename, "babynames/yob([0-9]{4})\\.txt", "\\1"))
+}
+filenames = str_c("babynames/", list.files("babynames"))
+names_list = lapply(filenames[-1],
+               read_with_year
+               )
+babynames = do.call(rbind, names_list)
+babynames
 ```
 
 ### Part 2 (4 points)
@@ -215,6 +297,25 @@ read_csv("babynames/yob1880.txt",
 What were the top 3 most popular names by sex in the 90's and how many people were given each of those names? Your answer should be a six-row data frame with three columns: `name`, `sex`, and `count`.  The names should be alphabetical with females first.  __pop90__
 ```{r}
 # Your code here
+nineties_male = filter(babynames, str_detect(year, "[1][9][9][0-9]") & sex == "M") %>% 
+  group_by(name) %>% 
+  tally() %>% 
+  arrange(desc(n)) %>% 
+  head(3, n) %>% 
+  rename(count = n) %>% 
+  arrange(name) %>% 
+  mutate(sex = "M")
+
+nineties_female = filter(babynames, str_detect(year, "[1][9][9][0-9]") & sex == "F") %>% 
+  group_by(name) %>% 
+  tally() %>% 
+  arrange(desc(n)) %>% 
+  head(3, n) %>% 
+  rename(count = n) %>% 
+  arrange(name) %>% 
+  mutate(sex = "F")
+
+rbind(nineties_female, nineties_male)[, c(1, 3, 2)]
 ```
 
 ### Part 3 (7 points)
@@ -227,7 +328,7 @@ Hints:
 * Be careful with the `total` ...
 * Your answer should round off to the table below:
 
-```{r, echo = F}
+```{r}
 data.frame(year = c(2006, 2007, 2008, 2009, 2010, 
                     2011, 2012, 2013, 2014, 2015),
            male = c(86.04, 85.51, 85, 84.53, 84.3, 
@@ -240,7 +341,45 @@ data.frame(year = c(2006, 2007, 2008, 2009, 2010,
 
 ```{r}
 # Your code here
+get_names_of_given_year = function(y, g = "[MF]"){
+  filter(babynames, year == y, str_detect(sex, g))
+}
+
+get_rate_of_representation = function(names){
+  
+  top1k = names %>% 
+    arrange(desc(n)) %>%
+    head(1000) %>%
+    summarise(count = sum(n))
+  first_1000 = top1k$count
+  
+  
+  all = names %>% 
+    arrange(desc(n)) %>% 
+    summarise(count = sum(n))
+  
+  round(top1k / all * 100, digit = 2)
+}
+
+female_rates = unlist(lapply(2006:2015, get_names_of_given_year, "F") %>% 
+  lapply(get_rate_of_representation))
+
+male_rates = unlist(lapply(2006:2015, get_names_of_given_year, "M") %>% 
+  lapply(get_rate_of_representation))
+
+total_rates = unlist(lapply(2006:2015, get_names_of_given_year) %>% 
+  lapply(get_rate_of_representation))
+
+percentage = data.frame(year = 2006:2015,
+           male = male_rates,
+           female = female_rates,
+           total = total_rates)
+percentage
+
+
 ```
 
 ### Discrepancy (0 points)
 Why should we expect our table to look different from the one presented on the SSA page?
+
+Privacy Protection, some name is not shown on the dataset they provided.
