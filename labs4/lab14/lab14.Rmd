@@ -1,0 +1,114 @@
+---
+title: "lab14"
+author: "Rongzhao Huang"
+date: "June 29, 2016"
+output: html_document
+---
+```{r}
+dat <- read.csv("EconomistData.csv")
+library(dplyr)
+library(tidyr)
+library(readr)
+library(stringr)
+library(lubridate)
+library(ggplot2)
+library(ggrepel)
+library(grid)
+library(gridExtra)
+
+
+p1 <- ggplot(dat, aes(x = CPI, y = HDI, color = Region))
+p1 + geom_point()
+(p2 <- p1 +
+  geom_smooth(aes(group = 1),
+              method = "lm",
+              formula = y ~ log(x),
+              se = FALSE,
+              color = "red")) +
+  geom_point()
+df2 <- data.frame(x = 1:5 , y = 1:25, z = 1:25)
+s <- ggplot(df2, aes(x = x, y = y))
+s + geom_point(aes(shape = z), size = 4) + scale_shape_identity()
+s + geom_point(aes(shape = z), size = 4, colour = "Red") +
+  scale_shape_identity()
+s + geom_point(aes(shape = z), size = 4, colour = "Red", fill = "Black") +
+  scale_shape_identity()
+p2 +
+  geom_point(shape = 1, size = 4)
+(p3 <- p2 +
+  geom_point(size = 4.5, shape = 1) +
+  geom_point(size = 4, shape = 1) +
+  geom_point(size = 3.5, shape = 1))
+pointsToLabel <- c("Russia", "Venezuela", "Iraq", "Myanmar", "Sudan",
+                   "Afghanistan", "Congo", "Greece", "Argentina", "Brazil",
+                   "India", "Italy", "China", "South Africa", "Spane",
+                   "Botswana", "Cape Verde", "Bhutan", "Rwanda", "France",
+                   "United States", "Germany", "Britain", "Barbados", "Norway", "Japan",
+                   "New Zealand", "Singapore")
+(p4 <- p3 +
+  geom_text(aes(label = Country),
+            color = "gray20",
+            data = subset(dat, Country %in% pointsToLabel)))
+p3 +
+  geom_text_repel(aes(label = Country),
+                  color = "gray20",
+                  data = subset(dat, Country %in% pointsToLabel),
+                  force = 10)
+dat$Region <- factor(dat$Region,
+                     levels = c("EU W. Europe",
+                                "Americas",
+                                "Asia Pacific",
+                                "East EU Cemt Asia",
+                                "MENA",
+                                "SSA"),
+                     labels = c("OECD",
+                                "Americas",
+                                "Asia &\nOceania",
+                                "Central &\nEastern Europe",
+                                "Middle East &\nnorth Africa",
+                                "Sub-Saharan\nAfrica"))
+p4$data <- dat
+p4
+library(grid)
+(p5 <- p4 +
+  scale_x_continuous(name = "Corruption Perceptions Index, 2011 (10=least corrupt)",
+                     limits = c(.9, 10.5),
+                     breaks = 1:10) +
+  scale_y_continuous(name = "Human Development Index, 2011 (1=Best)",
+                     limits = c(0.2, 1.0),
+                     breaks = seq(0.2, 1.0, by = 0.1)) +
+  scale_color_manual(name = "",
+                     values = c("#24576D",
+                                "#099DD7",
+                                "#28AADC",
+                                "#248E84",
+                                "#F2583F",
+                                "#96503F")) +
+  ggtitle("Corruption and Human development"))
+
+
+(p <- p5 +
+  theme_minimal() +
+  theme(text = element_text(color = "gray20"),
+        legend.position = c("top"), 
+        legend.direction = "horizontal",
+        axis.ticks.y = element_blank(), 
+        axis.line.y = element_blank(),
+        panel.grid.major.x = element_blank(),
+        text = element_text(color = "gray20"),
+        legend.justification = 0.1, # anchor point for legend.position.
+        legend.text = element_text(size = 11, color = "gray10"),
+        axis.text = element_text(face = "italic"),
+        axis.title.x = element_text(vjust = -1), # move title away from axis
+        axis.title.y = element_text(vjust = 2), # move away for axis
+        axis.line = element_line(color = "gray40", size = 0.5),
+        panel.grid.major = element_line(color = "gray50", size = 0.5),
+        panel.grid.major.x = element_blank()
+  ))
+
+footnote <- "Sources: Transparency International; UN Human Development Report"
+footgrob <- textGrob(footnote, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontface = "italic", fontsize = 12))
+g <- arrangeGrob(p, bottom = footgrob)
+grid.draw(g)
+
+```
