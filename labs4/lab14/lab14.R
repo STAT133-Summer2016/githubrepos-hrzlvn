@@ -1,3 +1,4 @@
+```{r}
 dat <- read.csv("EconomistData.csv")
 library(dplyr)
 library(tidyr)
@@ -114,4 +115,4 @@ grid.text(paste0("R² = ",
           draw = TRUE,
           just = "left")
 
-dev.off()
+```

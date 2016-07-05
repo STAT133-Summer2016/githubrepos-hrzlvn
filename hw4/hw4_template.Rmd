@@ -1,6 +1,6 @@
 ---
 title: "Homework 4"
-author:
+author: Rongzhao Huang
 date: "Due: 11:59pm Tuesday, July 5, 2016"
 output: html_document
 ---
@@ -50,6 +50,22 @@ One might suspect that bike rentals are more popular at certain times of day tha
 
 ```{r}
 # <Your Code>
+source("haversine.R")
+library(readr)
+library(stringr)
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(ggplot2)
+
+trips = read_csv("2014q4_trips.csv")
+
+trips %>%
+  mutate(weekend = ifelse(wday(sdate) == 1 | wday(sdate) == 7, "Weekend", "Weekday")) %>%
+  mutate(timedata = hour(sdate) + minute(sdate) / 60 + second(sdate) / 3600) %>%
+  ggplot() + geom_density(aes(x = timedata, fill = client), alpha = 0.3, color = NA) + facet_wrap(~weekend) +
+  ggtitle("Temporal Trends in Bike Usage") + scale_x_continuous(name = "Time of Day", breaks = seq(0, 24, by = 4))
+
 ```
 
 Hints:
@@ -65,6 +81,26 @@ Bikeshare members may behave differently than casual renters.  Here we look at h
 
 ```{r}
 # <Your code>
+
+stations = read_csv("dc_stations.csv")
+trips = read_csv("2014q4_trips.csv")
+sstations = stations %>% 
+  select(sstation = name, slat = lat, slong = long)
+estations = stations %>% 
+  select(estation = name, elat = lat, elong = long)
+crossed = crossing(sstations, estations)
+crossed = crossed %>% 
+  mutate(distance = haversine(slat, slong, elat, elong))
+
+trips = trips %>% 
+  mutate(weekend = ifelse(wday(sdate) == 1 | wday(sdate) == 7, "Weekend", "Weekday"))
+
+df = left_join(trips, crossed, all.x=TRUE) %>% 
+  filter(distance < 10)
+
+
+ggplot(df) + geom_density(aes(x = distance, fill = client), color = NA, alpha = 0.3) + facet_wrap(~weekend) +
+  ggtitle("Distance Between End and Start Stations") + scale_x_continuous(name = "Distance", breaks = seq(0, 10, by = 2.5))
 ```
 
 Hint:

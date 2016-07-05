@@ -195,8 +195,11 @@ $(document).ready(function () {
 ## 3 20th &amp; Bell St 38.8561 -77.0512 20th &amp; Crystal Dr 38.85640 -77.04920
 ## 4 20th &amp; Bell St 38.8561 -77.0512 15th &amp; Crystal Dr 38.86017 -77.04959</code></pre>
 <ol start="2" style="list-style-type: decimal">
-<li><p>You’ll need the <code>haversine</code> function to estimate the distance between two lat/long coordinates. Use the code below to load the function into your workspace. You’ll of course need to put it somewhere near the beginning of your knitr document. Open up the file to see its documentation.</p></li>
-<li>The goal of the last two points was to create a “dictionary” of distances between all possible station pairs. A suitable join will let you transfer the distance data to the trips data.</li>
+<li>You’ll need the <code>haversine</code> function to estimate the distance between two lat/long coordinates. Use the code below to load the function into your workspace. You’ll of course need to put it somewhere near the beginning of your knitr document. Open up the file to see its documentation.</li>
+</ol>
+<pre class="r"><code>source(&quot;haversine.R&quot;)</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li><p>The goal of the last two points was to create a “dictionary” of distances between all possible station pairs. A suitable join will let you transfer the distance data to the trips data.</p></li>
 <li><p>Alpha was set to 0.5.</p></li>
 </ol>
 </div>
