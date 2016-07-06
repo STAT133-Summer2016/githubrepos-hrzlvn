@@ -1,0 +1,136 @@
+---
+title: "lab15"
+author: "Rongzhao Huang"
+date: "July 4, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(xml2)
+```
+
+## Example of Checking Work
+The best way to deal with the `xml` data is to copy and paste it into a plain-text editor and save it as a `.xml` file.  Windows users, it's highly suggested you either use a Cygwin utility like nano or download Notepad++ rather than use Notepad.  I've saved the following data into `weather.xml` in the lab folder:
+
+```{r, eval = FALSE}
+<?xml version="1.0" encoding="UTF-8"?>
+<current_observation>
+
+<credit>NOAA's National Weather Service</credit>
+<credit_URL>http://weather.gov/</credit_URL>
+
+<image>
+  <url>http://weather.gov/images/xml_logo.gif</url>
+  <title>NOAA's National Weather Service</title>
+  <link>http://weather.gov</link>
+</image>
+
+<location>New York/John F. Kennedy Intl Airport, NY</location>
+<station_id>KJFK</station_id>
+<latitude>40.66</latitude>
+<longitude>-73.78</longitude>
+<observation_time_rfc822>Mon, 11 Feb 2008 06:51:00 -0500 EST
+</observation_time_rfc822>
+
+<weather>A Few Clouds</weather>
+<temp_f>11</temp_f>
+<temp_c>-12</temp_c>
+<relative_humidity>36</relative_humidity>
+<wind_dir>West</wind_dir>
+<wind_degrees>280</wind_degrees>
+<wind_mph>18.4</wind_mph>
+<wind_gust_mph>29</wind_gust_mph>
+<pressure_mb>1023.6</pressure_mb>
+<pressure_in>30.23</pressure_in>
+<dewpoint_f>-11</dewpoint_f>
+<dewpoint_c>-24</dewpoint_c>
+<windchill_f>-7</windchill_f>
+<windchill_c>-22</windchill_c>
+<visibility_mi>10.00</visibility_mi>
+
+<icon_url_base>http://weather.gov/weather/images/fcicons/</icon_url_base>
+<icon_url_name>nfew.jpg</icon_url_name>
+<disclaimer_url>http://weather.gov/disclaimer.html</disclaimer_url>
+<copyright_url>http://weather.gov/disclaimer.html</copyright_url>
+
+</current_observation>
+```
+
+To read the data, we'll need `read_xml()` from the `xml2` package.
+```{r}
+library(xml2)
+weather <- read_xml("weather.xml")
+```
+
+To test your XPath, use `xml_find_all()`.  The `text()` at the end grabs the text nodes.
+```{r, eval = F}
+xml_find_all(xml_doc, xpath)
+xml_find_all(weather, "/current_observation/latitude/text()")
+xml_find_all(weather, "//latitude/text()")
+```
+
+We'll go over the package in more detail tomorrow.  Today, let's just focus on understanding XML structure and XPath syntax.
+
+## Basic XPath
+
+Write XPaths that:
+
+1. Get the contents of the attribute `name`.
+```{r}
+f = read_xml("lab15_1.xml")
+xml_attr(f, "name")
+
+```
+2. Select all document elements beneath the node `linkList` with the name `A`.
+```{r}
+f = read_xml("lab15_2.xml")
+xml_find_all(f, "//linkList[@name = 'A']")
+```
+
+3. Select all jobs with `priority` corresponding to "critical" or "high".
+```{r}
+f = read_xml("lab15_3.xml")
+xml_find_all(f, "//job[@priority = 'critical' or @priority = 'high']" )
+```
+
+4. Select all persons older than 25
+```{r}
+f = read_xml("lab15_4.xml")
+xml_find_all(f, "//person[@age > 25]")
+```
+
+5. Select the names of the artists of every CD.
+
+```{r}
+f = read_xml("lab15_5.xml")
+xml_find_all(f, "/collection/artist/name")
+```
+## XPathing
+
+The next five questions refer to the document below.  You may want to draw out the document tree.  Experiment! Do comparisons like =, <, etc. need strings or values? Write XPaths that:
+
+```{r}
+f = read_xml("lab15-p2.xml")
+```
+
+6.  Select the prices of all the books.
+```{r}
+xml_find_all(f, "//price")
+```
+7.  Select books that are available on the web or on kindles.
+```{r}
+xml_find_all(f, '/bookstore/book[@category="web" or @category = "kindle"]')
+```
+8.  Select books that have page numbers available.
+```{r}
+xml_find_all(f, "//pages/..")
+```
+9.  Select the titles of books priced under $20.
+```{r}
+xml_find_all(f, "//title[../price<20]")
+```
+10. Select the authors of books that aren't written in English.
+```{r}
+xml_find_all(f, "//author[../title[@lang != 'en']]")
+```

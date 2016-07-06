@@ -1,0 +1,7 @@
+<jobs>
+  <job priority="critical" name="finish project" />
+  <job priority="low" name="clear rubbish" />
+  <job priority="low" name="pet cat" />
+  <job priority="medium" name="eat" />
+  <job priority="high" name="make phone call" />
+</jobs>

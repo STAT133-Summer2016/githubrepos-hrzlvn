@@ -1,0 +1,10 @@
+<document xmlns:xlink="http://www.w3.org/1999/xlink">
+  <linkList name="A">
+    <document xlink:href="15024" />
+    <document xlink:href="15028" />
+  </linkList>
+  <linkList name="B">
+    <document xlink:href="15030" />
+    <document xlink:href="15032" />
+  </linkList>
+</document>

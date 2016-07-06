@@ -1,0 +1,28 @@
+<collection>
+  <artist>
+    <name>Maroon 5</name>
+    <cds>
+      <cd>V</cd>
+      <cd>It won't be soon before long</cd>
+    </cds>
+  </artist>
+  <band>
+    <name>TaeYang</name>
+    <cds>
+      <cd>Rise</cd>
+    </cds>
+  </band>
+  <band>
+    <name>Uniq</name>
+    <cds>
+      <cd>EOEO</cd>
+    </cds>
+  </band>
+  <artist>
+    <name>Michael Jackson</name>
+    <mvs>
+      <mv>Bad</mv>
+      <mv>Thriller</mv>
+    </mvs>
+  </artist>
+</collection>
