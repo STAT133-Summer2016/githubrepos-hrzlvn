@@ -1,0 +1,178 @@
+---
+title: "lab17"
+author: "Rongzhao Huang"
+date: "July 6, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rvest)
+library(tidyr)
+library(readr)
+library(stringr)
+library(lubridate)
+```
+
+## rvest
+Please install the package `rvest` before doing today's lab.
+
+## HTML 0-60-0 Crash Course
+
+We've already looked at XML, which is a language meant to _describe_ data.  HTML is another closely related markup language meant to _display_ data.  In HTML, the tags actually carry special meanings that your browsers then parse for your consumption.  Some common tags and their meanings are shown below:
+
+Tag Name | Meaning
+-------- | --------------------------------------------
+`<html>` | the "root" node of every html document
+`<h1>`   | top level header
+`<p>`    | paragraph
+`<br>`   | line break
+`<b>`    | bold
+`<div>`  | a new section of the document
+
+It's not super important that you know the meaning of the tags, but that you understand that HTML documents will have much more predicatable tags.  Some other ways that HTML differs from XML is:
+
+* Closing tags is not as strict.  For example, you may see `<p>` without `</p`>
+* Nesting is not as a strict. You could see something like `<b><i>text</b></i>` for italic-bold text
+
+While people generally try to make the documents well-formed, the fact that browsers can still understand HTML documents that aren't so nice will sometimes make it difficult for XML parsers to read HTML data.
+
+## CSS Selectors
+
+Cascading Style Sheets, or CSS for short, are style documents that tell your browser how to display certain elements of an html document.  Rather than having to define color, emphasis, etc. for _every single element_ of an html document (this would and did take forever!), web designers can just define a style sheet with universal attributes for classes of elements.  For example:
+
+```{html, eval = FALSE}
+.center {
+    text-align: center;
+    color: red;
+}
+```
+
+The above says that everything with `class="center"` should be centered and in red.  What's important for us is that it gives html documents another layer of structure that we can use to find nodesets called selectors.  You can think of selectors as shortcut XPaths to very specific attributes or elements.  Below are some examples and their XPath translations.
+
+Selector          | Example | Example Meaning                           | XPath translation
+----------------- | ------- | ----------------------------------------- | --------------------------------------
+`.class`          | `.intro`| selects all elements with `class="intro"` | `//*[@class="intro"]`
+`#id`             | `#bob`  | selects all elements with `id="bob"`      | `//*[@id="bob"]`
+`element`         | `p`     | selects all `<p>` elements                | `//p`
+`element element` | `div p` | selects all `<p>` inside `<div>` elements | `//div//p`
+
+## rvest
+`rvest`, for the most part, acts like the `xml2` package, but is specialized for `html`.  In addition to its html parsers, it has commands that let you navigate a webpage from within `R`, including filling out forms like username and passwords and following links to other pages.  Those topics are beyond the scope of this class, but should be interesting for those of you with a web developing background.  The main functions we'll be working with are:
+
+Function             | Description
+-------------------- | ----------------------------------------------------------------------
+`read_html`           | reads in html data - can be a file, link, or literal string
+`html_nodes`          | finds all nodes fulfilling a css selector or xpath criteria
+`html_children`       | returns a nodeset of all the children of the supplied node
+`html_attr`           | retrieves all attributes of a given name from a nodeset
+`html_text`           | extracts the text nodes from an html nodeset
+`html_structure`      | displays structural information about an html document.  useful for exploration
+
+Note that to search for nodes, the function is `html_nodes` and that this function can take either XPath or a CSS selector!
+
+Below is an example of using the `rvest` package.  Finding the XPath involves searching through the html document yourself.  This is greatly simplified by using the development tools of a browser like Chrome or Firefox as we saw in class.
+
+## Parsing text nodes
+If you are interested in only one data type from the text nodes you've extracted, then the `readr` package has a family of `parse` functions that are easier to use than constructing regular expressions.  For example, if I had a character vector of dollar amounts and I only wanted the numerical value, I could use `parse_number`.
+
+```{r}
+monies <- c("$12", "$15", "$19.23")
+parse_number(monies)
+```
+
+See `?parse_guess` for all the other things that can be parsed.  These are meant to be wrapper functions that deal with common cases---regular expressions will always be more powerful!
+
+## Example
+
+```{r}
+page <- read_html("http://www.zillow.com/homes/Berkeley/")
+
+# Using XPath to get the info on the photos in the sidebar
+houses <- page %>%
+  html_nodes(xpath = '//*[@class="photo-cards"]/li/article')
+houses
+
+# Using CSS Selectors
+houses2 <- page %>% 
+  html_nodes(".photo-cards li article")
+
+# Explore the structure of your nodeset
+html_structure(houses)
+
+# Grabbing the addresses using a CSS selector
+address <- houses %>%
+  html_node(".zsg-photo-card-address") %>%
+  html_text()
+
+# Grabbing prices
+price <- houses %>%
+  html_node(".zsg-photo-card-price") %>%
+  html_text() %>%
+  parse_number()
+
+# Grabbing the bed, bath, and area information.  \u00b7 is the unicode for the dot that you see on the webpage.
+params <- houses %>%
+  html_node(".zsg-photo-card-info") %>%
+  html_text() %>%
+  str_split("\u00b7") # the dot character
+
+beds <- params %>% sapply(function(x) parse_number(x[1]))
+baths <- params %>% sapply(function(x) parse_number(x[2]))
+house_area <- params %>% sapply(function(x) parse_number(x[3]))
+
+# Side note: Not worth it in this case, but to not have to copy-pasta:
+info <- params %>% 
+  lapply(`length<-`, max(lengths(params))) %>%
+  do.call(what = rbind) %>% 
+  apply(2, parse_number) %>% 
+  data.frame()
+names(info) <- c("beds", "baths", "house_area")
+```
+
+## Lab 
+See how much you can scrape from the tripadvisor page for the Golden Gate Bridge.  You should at least scrape the following information:
+
+* The quote on each review (italic blue text)
+* The star rating in each review
+* The date of the review
+* The actual text in the review
+
+To get you started off, the nodeset for the reviews all share a class `innerBubble` and a parent with id `REVIEWS`.
+
+```{r}
+get_info = function(v){
+  v[1]
+}
+url <- url <- "https://www.tripadvisor.com/Attraction_Review-g60713-d104675-Reviews-Golden_Gate_Bridge-San_Francisco_California.html"
+
+mpage = read_html(url)
+
+mreviews <- mpage %>%
+  html_nodes(xpath = '//*[@class="innerBubble"]/*[@class="wrap"]')
+
+titles = mreviews %>% 
+  html_nodes(".noQuotes") %>% 
+  html_text()
+
+ratings = mreviews %>% 
+  html_nodes(xpath="//div[@class='wrap']/*[@class='rating reviewItemInline']/span/img") %>% 
+  html_attr(name = "alt") %>% 
+  str_split(" ") %>% 
+  sapply(get_info)
+
+dates = mreviews %>% 
+  html_nodes(".ratingDate.relativeDate") %>% 
+  html_attr("title") %>% 
+  mdy()
+dates
+
+reviews = mreviews %>% 
+  html_nodes(".partial_entry") %>% 
+  html_text()
+
+info = data.frame(titles, ratings, dates, reviews)
+info
+
+
+```
