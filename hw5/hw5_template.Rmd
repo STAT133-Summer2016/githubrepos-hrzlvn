@@ -1,0 +1,163 @@
+---
+title: "hw5"
+author: "Rongzhao Huang"
+date: Due 11:59pm Wednesday, July 13, 2016
+output: html_document
+---
+
+## Packages
+
+The following packages are allowed for this assignment:
+
+* rvest
+* xml2
+* ggplot2
+* lubridate
+* stringr
+* dplyr
+* tidyr
+* readr
+* scales
+```{r, echo = F}
+library(rvest)
+library(xml2)
+library(ggplot2)
+library(lubridate)
+library(stringr)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(scales)
+```
+
+## Nuclear Reactors
+
+## Introduction
+In this homework, you'll be scraping tables off the Wikipedia website.  The idea of doing this is always the same: find XPath expressions that lead to tables of interest, scrape them using `html_nodes()`, remove problem nodes with subsetting, and then converting the tables using `html_table()`.  Your goal is to produce the two graphs at the bottom of these instructions.
+
+The aim of this assignment is to show you how dirty online data sources can be.  As you'll find out, finding and reading in the data will be the least of your worries.  You'll spend a good chunk of time thinking of how to clean the data before you can even think about plotting it! Do not despair---while there may not be enough examples in the world to show you every case you might come up against, the more you practice thinking about these issues on your own, the stronger your __intuition__ will become.
+
+## Restrictions
+To ensure that you are actually thinking about wrangling strategies, any manipulation of the data frame must be done with `dplyr` wrangling verbs (with the exception of renaming the columns).
+
+__Bonus__: You may earn 10 bonus points if your code chunks:
+
+* Never exceeds 80 characters in width
+* Never calls on more than 3 functions per line
+* Doesn't exceed 80 lines total
+
+If you're using RStudio, the numbers on the bottom-left of the code panel show where the cursor is in the document.  Use this to check if you're within the limits.  You'll need to make full use of all the tools we've learned in class so far---from writing functions to using the `lapply` family.
+
+## Starter Code
+The starter code below should prime your thinking.  The angle brackets are __not__ literal.  Do not include them when running your code.
+```{r, eval = F}
+
+# remember that the dot shows where the pipe is placing the output
+# of the function from the last line.  The third pipe leads into the subsetting
+# operator.  This is probably where you want to remove problem nodes...
+html_page <- "http://en.wikipedia.org/wiki/List_of_nuclear_reactors"
+xpath <- <some_path_here>
+table_list <- html_page %>%
+  read_html() %>%
+  html_nodes(xpath = xpath) %>%
+  .[<some_vector_here>] %>%
+  html_table(fill = TRUE)
+
+# The above code returns a list of tables.  Use subsetting to pick out specific tables
+table_list[[<some_number_here>]]
+
+# A vector of names you might want in your initial data frame
+new_names <- c("name", "reactor", "type", "model", "status", 
+               "net", "gross", "const_start", "op_start", "closure")
+
+# An example of slice from the dplyr package.  It's like filter, but for picking
+# out specific rows.  You may or may not use this.
+df <- data.frame(x = 1:3, y = 4:6)
+df %>% slice(c(1,3))
+df %>% slice(-3)
+```
+
+## Hints:
+1. The US nuclear reactor table doesn't behave nicely---why? Read through the assumptions of `html_table`.
+2. As you try to clean the French nuclear reactor data, one of the dates will not parse---why? You can ignore this particular row.
+3. You'll need to fix the column names! No `dplyr` function will handle this correctly since the columns are not unique.  You'll have to rely on the class `names()` function.
+4. The size of the points in the France-Japan scatterplot is 2.
+5. The geometries in the Japan Construction graph are segments.
+6. You'll have to play with the `breaks` and `labels` of both axes.
+7. If you use `date_format`, you'll need to load the `ggplot2` library extension `scales`.
+8. By default, strings are alphabetized for graphing.  If you turn the data into an ordered factor however...
+9. All the reactors are present, but only one instance of the reactor name shows up for each reactor site.  For example `Tsuruga 1` and `Tsuruga 2` both show up under `Tsuruga` with the second one being represented by a tick with no label.
+10. Empty strings don't show up...
+
+```{r}
+# Fetch the two tables from html
+html_page <- "http://en.wikipedia.org/wiki/List_of_nuclear_reactors"
+xpath <- "//table[@class='wikitable' or 'wikitable sortable jquery-tablesorter']"
+table_list <- html_page %>%
+  read_html() %>%
+  html_nodes(xpath = xpath) %>%
+  .[c(16,23)] %>%
+  html_table(fill = TRUE)
+
+#rename the labels
+tidy_table = function(table){
+  colnames(table) = c("name", "reactor", "type", "model", "status", 
+               "net", "gross", "const_start", "op_start", "closure")
+  table %>% 
+    slice(-1) %>% 
+    mutate(const_start = year(dmy(const_start))) %>% 
+    mutate(op_start = year(dmy(op_start))) %>% 
+    mutate(net = as.numeric(net)) %>% 
+    mutate(gross = as.numeric(gross)) %>% 
+    na.omit()
+}
+table_list[[1]] = slice(table_list[[1]], -51)
+table_list = lapply(table_list, tidy_table)
+table_list[[1]] = table_list[[1]] %>% mutate(country="France")
+table_list[[2]] = table_list[[2]] %>% mutate(country="Japan")
+
+#plot Japan and France into plot 1 and renanme the labels
+plot_one = do.call(rbind, table_list) %>% 
+  mutate(type = factor(type, 
+                       labels = c("Boiling Water", 
+                                  "Fast Breeder", 
+                                  "Gas Cooled", 
+                                  "Heavy Water Gas Cooled", 
+                                  "Pressurized Water")))
+
+ggplot(plot_one) + 
+  geom_point(aes(const_start, net, color = country, shape = type), size = 2) +
+  scale_x_continuous(breaks = seq(1960, 2010, 10)) + 
+  labs(x = "Construction Start Date",
+       y = "Net Capacity (MW)",
+       shape = "Reactor Type",
+       color = "Country",
+       title = "Net Reactor Capacities\nin France and Japan")
+
+# Plot two has a column of each reactor's name and the numbers
+plot_two = mutate(table_list[[2]], 
+                  site = str_c(name, 
+                               reactor, 
+                               sep = " "),
+                  site = rev(factor(site)), #reverse the order by factor
+                  type = factor(type, labels = c("Boiling Water", 
+                                                 "Fast Breeder", 
+                                                 "Gas Cooled", 
+                                                 "Pressurized Water"))) 
+
+ggplot(plot_two) + 
+  geom_segment(aes(x = const_start, 
+                   xend = op_start, 
+                   y = site, 
+                   yend = site, 
+                   color = type)) + 
+  scale_y_discrete(labels = sapply(plot_two$site, #rename y-axis labels
+                                   str_replace, 
+                                   " 1$|.*[2-9]$",
+                                   "")) +
+  labs(title = "Construction Times for\nJapanese Nuclear Reactors",
+       x = "Date",
+       y = "Reactor Site",
+       color = "Reactor Type")
+```
+
