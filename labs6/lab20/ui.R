@@ -22,6 +22,6 @@ shinyUI(fluidPage(
 				value = c(0, 40))
 			),
 				
-			mainPanel()
+			mainPanel("text1")
 	)
 ))
