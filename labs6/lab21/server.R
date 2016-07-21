@@ -1,6 +1,3 @@
-library(shiny)
-library(dplyr)
-library(ggplot2)
 
 shinyServer(function(input, output) {
   output$diamonds_plot <- renderPlot({

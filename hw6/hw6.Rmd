@@ -1,0 +1,302 @@
+---
+title: "hw6"
+author: ""
+date: "July 13, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(stringr)
+library(xml2)
+library(rvest)
+library(readr)
+library(tidyr)
+library(plyr)
+```
+
+
+## Messy Style (10 points)
+This homework folder includes a `dirty_code.r` file that some students submitted in the past.  Clean up the script according to our class style guide.  Avoid creating extraneous columns like they did.  You should use the packages covered in this class to make the code more readable.  Instead of manually inputting manufacturer country-of-origin, use the appropriate table [on this wikipedia page](https://en.wikipedia.org/wiki/Automotive_industry) instead.  The alignment won't be perfect, but you can ignore the manufacturers that don't have a direct match (you will still get information on more cars than the original coders did!).
+
+
+### Hints:
+* The `bz2` extension in `mpg2.csv.bz2` just denotes a file compression.  `read_csv` will still be able to read the file.
+* The whole script can be done with a table scrape, 3 wrangling verbs, and a join.
+* You can significantly shorten what they did to create their `z` column by using regular expressions.
+* Don't actually create a column called `z`...  in fact, don't create any of the extra columns they did.  Instead, `mutate` the appropriate columns.
+* Include a `write_csv()` call in your script, but don't actually submit the cleaned csv.
+
+```{r, eval = FALSE}
+# <Your Cleanup Code>
+table = read_html("https://en.wikipedia.org/wiki/Automotive_industry") %>% 
+  html_nodes(xpath="//table[@class='wikitable sortable']") %>%
+  .[1] %>% 
+  html_table(fill = TRUE) %>% 
+  data.frame() %>% 
+  mutate(Group = tolower(Group)) %>% 
+  select(-Cars, -LCV, -HCV, -Heavy.Bus, -Total)
+
+mpg2 <- read.csv("mpg2.csv.bz2", stringsAsFactors=FALSE,  strip.white=TRUE) %>%
+  mutate(make = tolower(make))
+
+mpg2 = merge(mpg2, table) %>% 
+  select(-trans_dscr, -eng_dscr, -Rank, -Group) %>% 
+  mutate(vclass = str_replace_all(vclass, "[-/ ]?[ ]?[24][wWdD]{2}$", "")) %>%
+  mutate(vclass = str_replace_all(vclass, ", ", " ")) %>%
+  mutate(vclass = str_replace_all(vclass, " Passenger", "")) %>%
+  mutate(vclass = str_replace_all(vclass, " Cargo", "")) %>%
+  mutate(vclass = str_replace_all(vclass, " Type", "")) %>%
+  mutate(vclass = str_replace_all(vclass, "Midsize-Large", "Large")) %>%
+  mutate(vclass = str_replace_all(vclass, "(.*[^s ]$)", "\\1s"))
+
+mpg2$guzzler[is.na(mpg2$guzzler)] = FALSE
+mpg2$guzzler = as.logical(mpg2$guzzler)
+
+write.csv(subset(mpg2, year >= 2000), "mpg2-clean.csv")
+mpg3 <- read.csv("mpg2-clean.csv", stringsAsFactors=FALSE,  strip.white=TRUE)
+```
+
+## Shiny App (30 points)
+
+Watch this wonderful video on data visualization:
+
+[https://youtu.be/jbkSRLYSojo](https://youtu.be/jbkSRLYSojo)
+
+Your goal will be to reproduce a very similar dynamic plot.  Note that you can "play" the graph!
+
+[https://doctordo.shinyapps.io/demographic/](https://doctordo.shinyapps.io/demographic/)
+
+When you are done, sign up for a free account on [shinyapps.io](http://www.shinyapps.io/) and follow the instructions to upload your app.  Include a link to your app in this document.
+
+[You can find region codes here.](https://docs.google.com/spreadsheets/d/1OxmGUNWeADbPJkQxVPupSOK5MbAECdqThnvyPrwG5Os/pub?gid=1#)  You can ignore countries that aren't included in this google sheet.
+
+### Cleaning
+The data are not in the right format to produce the plots.  You should write a script that cleans your data exports a `cleaned_demographics.csv` file.  Copy the contents of the script into the chunk below.  I should be able to run this code to go from the three included data files to your `cleaned_demographics.csv` without hassle.
+
+```{r, eval = FALSE}
+cleaned_population = read_csv("population.csv")
+cols = str_detect(colnames(cleaned_population), "[0-9a-z]")
+cleaned_population = cleaned_population[!is.na(cols)]
+names(cleaned_population) = c('country', str_replace(names(cleaned_population)[2:82], "([0-9]{4}).0", "\\1"))
+cleaned_population = cleaned_population %>% 
+  filter(!is.na(country))
+
+na_years = as.character(c(1801:1809,
+                          1811:1819, 
+                          1821:1829, 
+                          1831:1839, 
+                          1841:1849, 
+                          1851:1859,
+                          1861:1869, 
+                          1871:1879, 
+                          1881:1889,
+                          1891:1899, 
+                          1901:1909, 
+                          1911:1919,
+                          1921:1929, 
+                          1931:1939, 
+                          1941:1949))
+
+na_df = data.frame(matrix(NA, ncol = 135, nrow = 275))
+names(na_df) = na_years
+na_df = mutate(na_df, country = cleaned_population$country)
+cleaned_population = left_join(cleaned_population, na_df)
+cleaned_population = cleaned_population[,c('country', c(as.character(1800:2015)))]
+
+
+for (i in 1:nrow(cleaned_population)){
+  for (j in 1800:2015){
+    if (is.na(cleaned_population[i, as.character(j)])){
+      adjcent_years_population = cleaned_population[i, intersect(as.character((j %/% 10 * 10) : ((j %/% 10 * 10) + 9)), x = colnames(cleaned_population))]
+      
+      adjcent_years_population = as.numeric(adjcent_years_population[!is.na(adjcent_years_population)])
+      if (length(adjcent_years_population) > 0){
+        replace_val = mean(adjcent_years_population)
+        cleaned_population[i, as.character(j)] = mean(adjcent_years_population)
+      }
+    }
+  }
+}
+
+life_expectancy = read_csv("lifeexpectancy.csv") %>% 
+  gather(key = year, value = lifeexpectancy, -`Life expectancy with projections. Yellow is IHME`) %>% 
+  mutate(country = `Life expectancy with projections. Yellow is IHME`) %>%
+  mutate(year = as.numeric(year)) %>% 
+  select(country, year, lifeexpectancy) %>% 
+  filter(!is.na(country))
+
+population = cleaned_population %>%
+  gather(key = year, value = population, -country) %>%
+  mutate(year = as.numeric(year)) %>% 
+  select(country, year, population)
+
+gdppc = read_csv("gdppc.csv") %>% 
+  gather(key = year, value = gdp, -`GDP per capita`) %>% 
+  mutate(country = `GDP per capita`) %>%
+  select(country, year, gdp) %>% 
+  mutate(year = as.numeric(year)) %>% 
+  filter(!is.na(country))
+
+table = read_html("https://docs.google.com/spreadsheets/d/1OxmGUNWeADbPJkQxVPupSOK5MbAECdqThnvyPrwG5Os/pub?gid=1#") %>% 
+  html_nodes(xpath="//table[@class='waffle']") %>%
+  .[2] %>%
+  html_table(fill = TRUE) %>% 
+  data.frame() %>%
+  mutate(country = Var.2, region = Var.3, code = Var.4) %>%
+  select(country, region, code) %>%
+  filter(country != "Entity")
+
+cleaned_demographics = left_join(life_expectancy, population) %>% 
+  left_join(gdppc) %>% 
+  left_join(table)
+
+write_csv(cleaned_demographics, "cleaned_demographics.csv")
+
+```
+
+#### Hints
+
+* The population data are not complete, you can just assume that given a country, missing population for a year is just an average of the decade.  For example, if the population of France in 1834 is missing, you can just assume it's the same as the average of the population in 1830-1839 in France provided at least one of those values exists.
+* If a column has a dirty name with spaces or special characters in it, you can refer to it with backticks.  For example, there's a column called `GDP per capita` in the `GDDPC.csv` file.  You can rename it with ``rename(df, new_name = `GDP per capita`)``
+* There's a lot of `NA` nonsense that you should deal with.  Don't just remove all the `NA`s... some of them are there for legitimate reasons.
+
+### Making the Shiny App
+Create `server.R` and `ui.R` scripts for your app.  Copy the contents of your script into the chunks below.  I should be able to reproduce your app by running your cleaning script followed by your server and ui code.
+
+[Change the link in the parentheses to be the link to your app](https://hrzlvn.shinyapps.io/hw6app/)
+
+```{r ui, eval = FALSE}
+# <Your ui code>
+shinyUI(fluidPage(
+  titlePanel("Life Expectancy and Income"),
+  
+  sidebarLayout(
+    sidebarPanel(
+                 sliderInput("year",
+                             label = h5("Year:"),
+                             min = 1800,
+                             max = 2015,
+                             value = 1800, 
+                             format = "####", 
+                             step = 1,
+                             animate=TRUE
+                             )),
+    mainPanel(
+              plotOutput("demo_plot")
+              )
+  )
+))
+```
+
+```{r server, eval = FALSE}
+# <Your server code>
+library(dplyr)
+library(stringr)
+library(xml2)
+library(rvest)
+library(readr)
+library(tidyr)
+library(plyr)
+library(scales)
+library(ggplot2)
+
+cleaned_demographics = read.csv("cleaned_demographics.csv")
+
+shinyServer(function(input, output) {
+  output$demo_plot <- renderPlot({
+    
+    cleaned_demographics = cleaned_demographics %>% 
+      filter(year == input$year)
+    
+    ggplot(cleaned_demographics) +
+      geom_point(aes(x = gdp, y = lifeexpectancy,
+                     label = country, size = population, 
+                     fill = region), shape = 21, colour = "black", alpha = 0.7) +
+      labs(title = input$year, fill = "Region") + 
+  
+      scale_y_continuous(name = "Life Expectancy at Birth",
+                         labels = c("25 years","50 years","75 years"),
+                         breaks = c(25, 50, 75),
+                         limits = c(15, 80)
+                         ) +
+      scale_x_log10(name = 'GDP Per Capita (Inflation-Adjusted)',
+                    labels = c("$500", "$5000", "$50000"),
+                    breaks = c(500, 5000, 50000),
+                    limits = c(500, 110000)
+                        )+
+      scale_fill_manual(values = c("green","red", "yellow", "purple", "black", "blue")) +
+      
+      scale_size_continuous(guide = FALSE, range = c(1, 21)) +
+      
+      theme(text = element_text(size=15))
+      
+  })
+})
+
+```
+
+## Bonus (30 points)
+There's a way to make the plot even more interactive, but not with `ggplot`.  `ggplot` has a cousin called `ggvis` that allows you to, among other things, hover over points in the plot to reveal information about that point.  Implement a `shiny` app that acts like the one in the previous part, but has the additional feature of revealing the country when you hover your cursor over the data point. The hover functionality [should look something like this](http://www.gapminder.org/tools/bubbles#_state_time_value=1831).  Upload your app to your shiny.io account and include the link below in addition to copies of your `ui.R` and `server.R` scripts.  Given that it's bonus material, I will not be providing any troubleshooting.
+
+[Change the link in the parentheses to be the link to your app](http:www.yourlinkgoeshere.com)
+
+```{r, eval = FALSE}
+# <Your ui code>shinyUI(fluidPage(
+  titlePanel("Life Expectancy and Income"),
+  
+  sidebarLayout(
+    sidebarPanel(
+                 sliderInput("year",
+                             label = h5("Year:"),
+                             min = 1800,
+                             max = 2015,
+                             value = 1800, 
+                             format = "####", 
+                             step = 1,
+                             animate=TRUE
+                             )),
+    mainPanel(
+      uiOutput("ggvis_ui"),
+      ggvisOutput("ggvis")
+              )
+  )
+))
+```
+
+```{r, eval = FALSE}
+# <Your server code>
+library(dplyr)
+library(stringr)
+library(xml2)
+library(rvest)
+library(readr)
+library(tidyr)
+library(plyr)
+library(scales)
+library(ggplot2)
+library(ggvis)
+
+cleaned_demographics = read.csv("cleaned_demographics.csv")
+
+shinyServer(function(input, output) {
+ #which_year = reactive({year = input$year})
+  #input_year <- reactive(input$year)
+  cleaned_demographics %>% 
+      filter(year == 2015) %>% 
+      ggvis(~gdp, ~lifeexpectancy, 
+            fill = ~region, size = ~population, 
+            stroke:= "black", fillOpacity := 0.7) %>% 
+      layer_points() %>% 
+      add_axis("x", title = "GDP Per Capita (Inflation-Adjusted)") %>%
+      add_axis("y", title = "Life Expectancy at Birth") %>%
+      add_legend(c("fill","size")) %>% 
+      bind_shiny("ggvis", "ggvis_ui")
+
+})
+
+```
+
+## Submission
+On bCourses, you should just submit this rmd file and its knitted html page.  Your `hw6` folder on github should have your two cleaning scripts (one for the dirty code and one for the shiny app), and a directory containing your `server.R` and `ui.R` scripts.  If you're doing the bonus as well, then you should also have a directory for the bonus app.
