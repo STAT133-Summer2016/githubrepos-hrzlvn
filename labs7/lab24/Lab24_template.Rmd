@@ -1,0 +1,114 @@
+---
+title: "Lab 24"
+author: ""
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Monty Hall Generalization
+
+In the classic Monty Hall problem, there are three doors. Behind one of those doors is a car, and behind each of the other two doors is a goat. The contestant picks a door and Monty opens one of the remaining doors, one he knows doesn't hide the car. After Monty has shown a goat behind the door that he opens, the contestant is given the option to switch doors.
+
+Write a function called "simMH" that generalizes the Monty Hall problem. Your function should take the following arguments:
+
+`n`: the total number of doors;
+
+`k`: the number of doors Monty opens;
+
+`switch`: a logical value stating whether or not contestant decides to switch doors
+
+Your function should return:
+
+`win`: a logical value stating whether or not the contestant has selected the door that hides the car
+
+Recall: For a vector `x` of length 1, `sample()` considers `x` to be the vector `1:x`. It might be helpful to define a new function that will always return `x` if `length(x) == 1` but works like the regular `sample()` function for `x` of length greater than 1.
+
+
+```{r}
+simMH = function(n, k, switch){
+  sample_space = 1:n
+  selected = new_sample(sample_space, 1)
+  grail = new_sample(sample_space, 1)
+  set1 = setdiff(sample_space, grail)
+  open_set = setdiff(set1, selected)
+  open = new_sample(open_set, k)
+  set3 = setdiff(sample_space, open)
+  set4 = setdiff(set3, selected)
+  switched = new_sample(set4, 1)
+  
+ if(switch == TRUE){
+    if(switched == grail){1}
+    else{0}
+  }
+  
+  else{
+    if(selected == grail){1}
+    else{0}
+  }
+}
+
+new_sample = function(x, size){
+  if(length(x) == 1){
+    rep(x, times = size)
+  }
+  else{
+    sample(x, size)
+  }
+}
+```
+
+Check:
+```{r, eval = T}
+set.seed(12345)
+x <- replicate(10000, simMH(3, 1, switch = TRUE))
+sum(x)/length(x) #0.6681, exact answer: 2/3
+
+x <- replicate(10000, simMH(100, 98, switch = TRUE))
+sum(x)/length(x) #0.9905, exact answer: 0.99
+
+x <- replicate(10000, simMH(4, 1, switch = TRUE))
+sum(x)/length(x) #0.3844, exact answer: 3/8
+```
+
+
+
+## Monte Carlo Estimation of $\pi$ 
+
+Consider a circle embedded inside of the unit square. Let X and Y be independent random variables representing the x and y coordinates of a point, and suppose X and Y are uniformly distributed between [-1, 1]. 
+
+Note: The probability $(X,Y)$ lies inside the circle is equal to $$\frac{\pi r^2}{4r^2}$$ Therefore, to find $\pi$, we need only take $4*P(X^2 + Y^2 \le r^2)$. In this case, $r = 1$
+
+Write a function called "estimatePi" that takes in the the following arguments:
+
+`num.points`: an integer value stating the number of points to select from the unit square
+
+The function should return the following:
+
+`pi_hat`: estimation of $\pi$
+
+```{r}
+simulation = function(){
+  x = runif(1, min = -1, max = 1)
+  y = runif(1, min = -1, max = 1)
+  if((x^2 + y^2) <= 1){
+    1
+  }
+  else{0}
+}
+
+estimatePi = function(num){
+  x = replicate(num, simulation())
+  prob = sum(x)/length(x)
+  return(4*prob)
+}
+```
+
+
+Check:
+```{r, eval = T}
+set.seed(456123)
+estimatePi(100000) #3.1408
+```
+
