@@ -2,8 +2,8 @@ name: hw6ggvis
 account: hrzlvn
 server: shinyapps.io
 appId: 115862
-bundleId: 511187
+bundleId: 512303
 url: https://hrzlvn.shinyapps.io/hw6ggvis/
-when: 1469077528.09188
+when: 1469160008.01239
 asMultiple: FALSE
 asStatic: FALSE

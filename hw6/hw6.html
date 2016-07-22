@@ -245,9 +245,9 @@ table = read_html(&quot;https://docs.google.com/spreadsheets/d/1OxmGUNWeADbPJkQx
   select(country, region, code) %&gt;%
   filter(country != &quot;Entity&quot;)
 
-cleaned_demographics = left_join(life_expectancy, population) %&gt;% 
+cleaned_demographics = left_join(table, population) %&gt;% 
   left_join(gdppc) %&gt;% 
-  left_join(table)
+  left_join(life_expectancy)
 
 write_csv(cleaned_demographics, &quot;cleaned_demographics.csv&quot;)</code></pre>
 <div id="hints-1" class="section level4">
@@ -331,8 +331,19 @@ shinyServer(function(input, output) {
 <div id="bonus-30-points" class="section level2">
 <h2>Bonus (30 points)</h2>
 <p>There’s a way to make the plot even more interactive, but not with <code>ggplot</code>. <code>ggplot</code> has a cousin called <code>ggvis</code> that allows you to, among other things, hover over points in the plot to reveal information about that point. Implement a <code>shiny</code> app that acts like the one in the previous part, but has the additional feature of revealing the country when you hover your cursor over the data point. The hover functionality <a href="http://www.gapminder.org/tools/bubbles#_state_time_value=1831">should look something like this</a>. Upload your app to your shiny.io account and include the link below in addition to copies of your <code>ui.R</code> and <code>server.R</code> scripts. Given that it’s bonus material, I will not be providing any troubleshooting.</p>
-<p><a href="http:www.yourlinkgoeshere.com">Change the link in the parentheses to be the link to your app</a></p>
+<p><a href="https://hrzlvn.shinyapps.io/hw6ggvis/">Change the link in the parentheses to be the link to your app</a></p>
 <pre class="r"><code># &lt;Your ui code&gt;shinyUI(fluidPage(
+library(dplyr)
+library(stringr)
+library(xml2)
+library(rvest)
+library(readr)
+library(tidyr)
+library(plyr)
+library(scales)
+library(ggvis)
+
+shinyUI(fluidPage(
   titlePanel(&quot;Life Expectancy and Income&quot;),
   
   sidebarLayout(
@@ -349,7 +360,7 @@ shinyServer(function(input, output) {
     mainPanel(
       uiOutput(&quot;ggvis_ui&quot;),
       ggvisOutput(&quot;ggvis&quot;)
-              )
+      )
   )
 ))</code></pre>
 <pre class="r"><code># &lt;Your server code&gt;
@@ -361,25 +372,44 @@ library(readr)
 library(tidyr)
 library(plyr)
 library(scales)
-library(ggplot2)
 library(ggvis)
+
 
 cleaned_demographics = read.csv(&quot;cleaned_demographics.csv&quot;)
 
 shinyServer(function(input, output) {
- #which_year = reactive({year = input$year})
-  #input_year &lt;- reactive(input$year)
-  cleaned_demographics %&gt;% 
-      filter(year == 2015) %&gt;% 
-      ggvis(~gdp, ~lifeexpectancy, 
-            fill = ~region, size = ~population, 
-            stroke:= &quot;black&quot;, fillOpacity := 0.7) %&gt;% 
-      layer_points() %&gt;% 
-      add_axis(&quot;x&quot;, title = &quot;GDP Per Capita (Inflation-Adjusted)&quot;) %&gt;%
-      add_axis(&quot;y&quot;, title = &quot;Life Expectancy at Birth&quot;) %&gt;%
-      add_legend(c(&quot;fill&quot;,&quot;size&quot;)) %&gt;% 
-      bind_shiny(&quot;ggvis&quot;, &quot;ggvis_ui&quot;)
+  
+  df &lt;- reactive({cleaned_demographics %&gt;% 
+      filter(year == input$year) %&gt;% 
+      filter(lifeexpectancy &lt; 80) %&gt;% 
+      filter(gdp &gt; 500)
+  })
+  
+  hover_df = cleaned_demographics
+  hover_df$id = 1:nrow(hover_df)
 
+  
+  df %&gt;% 
+    ggvis(~log10(gdp), ~lifeexpectancy, key := ~country,
+          fill = ~region, size = ~population, 
+          stroke:= &quot;black&quot;, fillOpacity := 0.7) %&gt;% 
+    layer_points() %&gt;% 
+    scale_numeric(&quot;size&quot;, range = c(20,2000)) %&gt;%
+    add_axis(&quot;x&quot;,
+             ticks = 3,
+             title = &quot;GDP Per Capita (Inflation-Adjusted)&quot;) %&gt;%
+    add_axis(&quot;y&quot;, 
+             title = &quot;Life Expectancy at Birth&quot;) %&gt;%
+
+    scale_numeric(&quot;x&quot;, domain = c(log10(500), log10(120000))) %&gt;%
+    scale_numeric(&quot;y&quot;, domain = c(12, 80)) %&gt;% 
+
+    add_legend(&quot;fill&quot;) %&gt;% 
+    hide_legend(&quot;size&quot;) %&gt;%
+
+    add_tooltip(function(data)
+    {paste0(data$country)}, &quot;hover&quot;) %&gt;% 
+    bind_shiny(&quot;ggvis&quot;, &quot;ggvis_ui&quot;)
 })</code></pre>
 </div>
 <div id="submission" class="section level2">

@@ -1,3 +1,11 @@
+library(dplyr)
+library(stringr)
+library(xml2)
+library(rvest)
+library(readr)
+library(tidyr)
+library(plyr)
+
 cleaned_population = read_csv("population.csv")
 cols = str_detect(colnames(cleaned_population), "[0-9a-z]")
 cleaned_population = cleaned_population[!is.na(cols)]
@@ -70,8 +78,8 @@ table = read_html("https://docs.google.com/spreadsheets/d/1OxmGUNWeADbPJkQxVPupS
   select(country, region, code) %>%
   filter(country != "Entity")
 
-cleaned_demographics = left_join(life_expectancy, population) %>% 
+cleaned_demographics = left_join(table, population) %>% 
   left_join(gdppc) %>% 
-  left_join(table)
+  left_join(life_expectancy)
 
 write_csv(cleaned_demographics, "cleaned_demographics.csv")

@@ -6,23 +6,42 @@ library(readr)
 library(tidyr)
 library(plyr)
 library(scales)
-library(ggplot2)
 library(ggvis)
+
 
 cleaned_demographics = read.csv("cleaned_demographics.csv")
 
 shinyServer(function(input, output) {
- #which_year = reactive({year = input$year})
-  #input_year <- reactive(input$year)
-  cleaned_demographics %>% 
-      filter(year == 2015) %>% 
-      ggvis(~gdp, ~lifeexpectancy, 
-            fill = ~region, size = ~population, 
-            stroke:= "black", fillOpacity := 0.7) %>% 
-      layer_points() %>% 
-      add_axis("x", title = "GDP Per Capita (Inflation-Adjusted)") %>%
-      add_axis("y", title = "Life Expectancy at Birth") %>%
-      add_legend(c("fill","size")) %>% 
-      bind_shiny("ggvis", "ggvis_ui")
+  
+  df <- reactive({cleaned_demographics %>% 
+      filter(year == input$year) %>% 
+      filter(lifeexpectancy < 80) %>% 
+      filter(gdp > 500)
+  })
+  
+  hover_df = cleaned_demographics
+  hover_df$id = 1:nrow(hover_df)
 
+  
+  df %>% 
+    ggvis(~log10(gdp), ~lifeexpectancy, key := ~country,
+          fill = ~region, size = ~population, 
+          stroke:= "black", fillOpacity := 0.7) %>% 
+    layer_points() %>% 
+    scale_numeric("size", range = c(20,2000)) %>%
+    add_axis("x",
+             ticks = 3,
+             title = "GDP Per Capita (Inflation-Adjusted)") %>%
+    add_axis("y", 
+             title = "Life Expectancy at Birth") %>%
+
+    scale_numeric("x", domain = c(log10(500), log10(120000))) %>%
+    scale_numeric("y", domain = c(12, 80)) %>% 
+
+    add_legend("fill") %>% 
+    hide_legend("size") %>%
+
+    add_tooltip(function(data)
+    {paste0(data$country)}, "hover") %>% 
+    bind_shiny("ggvis", "ggvis_ui")
 })

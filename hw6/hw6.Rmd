@@ -148,9 +148,9 @@ table = read_html("https://docs.google.com/spreadsheets/d/1OxmGUNWeADbPJkQxVPupS
   select(country, region, code) %>%
   filter(country != "Entity")
 
-cleaned_demographics = left_join(life_expectancy, population) %>% 
+cleaned_demographics = left_join(table, population) %>% 
   left_join(gdppc) %>% 
-  left_join(table)
+  left_join(life_expectancy)
 
 write_csv(cleaned_demographics, "cleaned_demographics.csv")
 
@@ -240,10 +240,21 @@ shinyServer(function(input, output) {
 ## Bonus (30 points)
 There's a way to make the plot even more interactive, but not with `ggplot`.  `ggplot` has a cousin called `ggvis` that allows you to, among other things, hover over points in the plot to reveal information about that point.  Implement a `shiny` app that acts like the one in the previous part, but has the additional feature of revealing the country when you hover your cursor over the data point. The hover functionality [should look something like this](http://www.gapminder.org/tools/bubbles#_state_time_value=1831).  Upload your app to your shiny.io account and include the link below in addition to copies of your `ui.R` and `server.R` scripts.  Given that it's bonus material, I will not be providing any troubleshooting.
 
-[Change the link in the parentheses to be the link to your app](http:www.yourlinkgoeshere.com)
+[Change the link in the parentheses to be the link to your app](https://hrzlvn.shinyapps.io/hw6ggvis/)
 
 ```{r, eval = FALSE}
 # <Your ui code>shinyUI(fluidPage(
+library(dplyr)
+library(stringr)
+library(xml2)
+library(rvest)
+library(readr)
+library(tidyr)
+library(plyr)
+library(scales)
+library(ggvis)
+
+shinyUI(fluidPage(
   titlePanel("Life Expectancy and Income"),
   
   sidebarLayout(
@@ -260,7 +271,7 @@ There's a way to make the plot even more interactive, but not with `ggplot`.  `g
     mainPanel(
       uiOutput("ggvis_ui"),
       ggvisOutput("ggvis")
-              )
+      )
   )
 ))
 ```
@@ -275,25 +286,44 @@ library(readr)
 library(tidyr)
 library(plyr)
 library(scales)
-library(ggplot2)
 library(ggvis)
+
 
 cleaned_demographics = read.csv("cleaned_demographics.csv")
 
 shinyServer(function(input, output) {
- #which_year = reactive({year = input$year})
-  #input_year <- reactive(input$year)
-  cleaned_demographics %>% 
-      filter(year == 2015) %>% 
-      ggvis(~gdp, ~lifeexpectancy, 
-            fill = ~region, size = ~population, 
-            stroke:= "black", fillOpacity := 0.7) %>% 
-      layer_points() %>% 
-      add_axis("x", title = "GDP Per Capita (Inflation-Adjusted)") %>%
-      add_axis("y", title = "Life Expectancy at Birth") %>%
-      add_legend(c("fill","size")) %>% 
-      bind_shiny("ggvis", "ggvis_ui")
+  
+  df <- reactive({cleaned_demographics %>% 
+      filter(year == input$year) %>% 
+      filter(lifeexpectancy < 80) %>% 
+      filter(gdp > 500)
+  })
+  
+  hover_df = cleaned_demographics
+  hover_df$id = 1:nrow(hover_df)
 
+  
+  df %>% 
+    ggvis(~log10(gdp), ~lifeexpectancy, key := ~country,
+          fill = ~region, size = ~population, 
+          stroke:= "black", fillOpacity := 0.7) %>% 
+    layer_points() %>% 
+    scale_numeric("size", range = c(20,2000)) %>%
+    add_axis("x",
+             ticks = 3,
+             title = "GDP Per Capita (Inflation-Adjusted)") %>%
+    add_axis("y", 
+             title = "Life Expectancy at Birth") %>%
+
+    scale_numeric("x", domain = c(log10(500), log10(120000))) %>%
+    scale_numeric("y", domain = c(12, 80)) %>% 
+
+    add_legend("fill") %>% 
+    hide_legend("size") %>%
+
+    add_tooltip(function(data)
+    {paste0(data$country)}, "hover") %>% 
+    bind_shiny("ggvis", "ggvis_ui")
 })
 
 ```

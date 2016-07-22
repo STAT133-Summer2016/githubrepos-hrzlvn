@@ -1,3 +1,13 @@
+library(dplyr)
+library(stringr)
+library(xml2)
+library(rvest)
+library(readr)
+library(tidyr)
+library(plyr)
+library(scales)
+library(ggvis)
+
 shinyUI(fluidPage(
   titlePanel("Life Expectancy and Income"),
   
@@ -15,6 +25,6 @@ shinyUI(fluidPage(
     mainPanel(
       uiOutput("ggvis_ui"),
       ggvisOutput("ggvis")
-              )
+      )
   )
 ))

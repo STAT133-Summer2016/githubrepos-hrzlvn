@@ -2,8 +2,8 @@ name: hw6app
 account: hrzlvn
 server: shinyapps.io
 appId: 115836
-bundleId: 511129
+bundleId: 512239
 url: https://hrzlvn.shinyapps.io/hw6app/
-when: 1469072178.62369
+when: 1469155281.36699
 asMultiple: FALSE
 asStatic: FALSE
