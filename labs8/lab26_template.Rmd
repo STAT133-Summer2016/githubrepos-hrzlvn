@@ -1,0 +1,123 @@
+---
+title: "lab25"
+date: "July 26, 2016"
+output: html_document
+---
+
+Write a function called `moveCars()` that moves the system one full step; that is, the function should move the red cars east once and the blue cars north once, with red cars going first.
+
+Your function should take the following inputs:
+`m`: a matrix
+
+Your function should return a list containing two elements:
+`m`: an updated matrix
+`not_gridlocked`: a logical value that should be TRUE if the system changed and FALSE if not
+
+```{r}
+moved <- FALSE
+
+moveCars <- function(m) {
+  blocked <- FALSE
+  #red cars
+  for (row in 1:nrow(m)) {
+    for (column in ncol(m):1) {
+      
+        if (m[row, column] == 1) {
+          
+          if (column + 1 > ncol(m)) {
+              new_col <- 1
+              if (m[row, new_col] == 0) {
+                blocked <- TRUE
+              }
+        
+        } else {
+          new_col <- column + 1
+        }
+        
+          if ((column == 1 & blocked == FALSE & m[row, new_col] == 0) | 
+              (column != 1 & m[row, new_col] == 0)) {
+            m[row, new_col] <- m[row, column]
+            m[row, column] <- 0
+            moved <- TRUE
+          }
+      }
+    }
+  }
+  blocked <- FALSE
+  
+  #blue cars
+  for (row in 1:nrow(m)) {
+    for (column in 1:ncol(m)) {
+      
+      if (m[row, column] == 2) {
+          
+            if (row - 1 < 1) {
+            new_row <- nrow(m)
+            if (m[new_row, column] == 0) {
+              blocked <- TRUE
+            }
+        
+      } else {
+          new_row <- row - 1
+        }
+        
+        if ((row == nrow(m) & blocked == FALSE & m[new_row, column] == 0) |
+            (row != nrow(m) & m[new_row, column] == 0)) {
+          m[new_row, column] <- m[row, column]
+          m[row, column] <- 0
+          moved <- TRUE
+        }
+      }
+    }
+  }
+  x <- list(m, moved)
+  return(x)
+}
+```
+
+
+Check:
+```{r}
+m <- matrix(c(1,0,0,0,2,1,2,0,0,2,0,1,1,0,1,2,0,1,2,1,0,0,1,1,2), nrow = 5, ncol = 5, byrow = T)
+identical(moveCars(m), list(matrix(c(0,1,0,0,2,1,2,0,0,2,1,1,0,1,0,2,0,1,2,1,0,0,1,1,2), nrow = 5, ncol = 5, byrow = T), TRUE))
+
+m <-  matrix(c(0,1,0,2,1), nrow = 1, ncol = 5, byrow = T)
+identical(moveCars(m), list(matrix(c(1,0,1,2,0), nrow = 1, ncol = 5, byrow = T), TRUE))
+
+m <- matrix(c(2,0,1,2,0), nrow = 5, ncol = 1, byrow = T)
+identical(moveCars(m), list(matrix(c(0,0,1,2,2), nrow = 5, ncol = 1, byrow = T), TRUE))
+```
+
+Now write a function called `initGrid()` that randomizes the initial system.
+
+Your function should take the following inputs:
+`r`: number of rows in the matrix
+`c`: number of columns in the matrix
+`d`: density of the grid 
+
+Your function should return the following:
+`m`: an rxc matrix with entries 0 (no cars), 1 (red cars), or 2 (blue cars)
+
+```{r}
+initGrid <- function(r, c, d) {
+  m <- matrix(NA, nrow = r, ncol = c, byrow = FALSE)
+  for (c in 1:ncol(m)) {
+    for(r in 1:nrow(m)) {
+      m[r, c] <- sample(c(0:1), size = 1, replace = TRUE, prob = c(d, 1 - d))
+      if (m[r, c] != 0) {
+        m[r, c] <- sample(c(1:2), size = 1, replace = TRUE, prob = c(0.5, 0.5))
+
+      }
+    }
+  }
+  return(m)
+}
+
+initGrid(5, 5, 0.4)
+```
+
+
+
+
+
+

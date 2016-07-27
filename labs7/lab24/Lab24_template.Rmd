@@ -1,6 +1,6 @@
 ---
 title: "Lab 24"
-author: ""
+author: "Rongzhao Huang"
 ---
 
 ```{r setup, include=FALSE}
